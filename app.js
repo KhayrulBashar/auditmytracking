@@ -13,6 +13,22 @@ const DISPOSABLE_DOMAINS = [
   "crazymailing.com", "throwawaymail.com", "burnermail.io", "tempail.com"
 ];
 
+// গ্লোবাল ফাংশন হিসেবে ডিক্লেয়ার করা যাতে onclick বা event listener উভয় থেকেই পায়
+window.handleGoogleSignIn = async function() {
+  console.log("Initiating Google Sign-In via Supabase...");
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: "https://khayrulbashar.github.io/auditmytracking/",
+    },
+  });
+
+  if (error) {
+    alert("Google Sign-In Error: " + error.message);
+    console.error("Auth error details:", error);
+  }
+};
+
 function onCountryChanged() {
   validatePhoneLive();
 }
@@ -112,22 +128,6 @@ function updateNavForLoggedInUser() {
   }
 }
 
-// Supabase Google OAuth Sign-In
-async function handleGoogleSignIn() {
-  const redirectUrl = window.location.href.split("#")[0];
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: redirectUrl,
-    },
-  });
-
-  if (error) {
-    alert("Google Sign-In Error: " + error.message);
-  }
-}
-
-// Signup with Supabase Passwordless OTP
 async function handleSignup() {
   if (!validateEmailLive()) {
     alert("Please enter a valid work email before proceeding.");
@@ -181,7 +181,6 @@ async function handleSignup() {
   }
 }
 
-// Request OTP for Login
 async function requestOtp() {
   const email = document.getElementById("loginEmail").value.trim().toLowerCase();
   const btn = document.getElementById("otpSendBtn");
@@ -210,7 +209,6 @@ async function requestOtp() {
   }
 }
 
-// Verify 6-digit OTP
 async function verifyOtp() {
   const token = document.getElementById("loginOtp").value.trim();
   const btn = document.getElementById("otpVerifyBtn");
@@ -242,13 +240,11 @@ async function verifyOtp() {
   }
 }
 
-// Sign Out
 async function handleLogout() {
   await supabase.auth.signOut();
   window.location.reload();
 }
 
-// Audit Inspector Simulation
 async function runAudit() {
   const url = document.getElementById("targetUrl").value.trim();
   const auditBtn = document.getElementById("auditBtn");
@@ -308,8 +304,18 @@ function handlePlanSelection(planName) {
   alert(`Thank you for selecting "${planName}". Redirecting to onboarding & checkout flow...`);
 }
 
-// Initial Session Check
-async function init() {
+// DOM লোড হওয়ার পর ইভেন্ট লিসেনার ও সেশন চেক
+document.addEventListener("DOMContentLoaded", async () => {
+  const btnSignup = document.getElementById("googleSignInBtnSignup");
+  const btnLogin = document.getElementById("googleSignInBtnLogin");
+
+  if (btnSignup) {
+    btnSignup.addEventListener("click", window.handleGoogleSignIn);
+  }
+  if (btnLogin) {
+    btnLogin.addEventListener("click", window.handleGoogleSignIn);
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -322,6 +328,4 @@ async function init() {
       showView("dashboard");
     }
   });
-}
-
-window.addEventListener("DOMContentLoaded", init);
+});

@@ -67,7 +67,7 @@
         <!-- Google OAuth Button -->
         <button
           type="button"
-          onclick="handleGoogleSignIn()"
+          id="googleSignInBtnSignup"
           class="w-full mb-4 flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-xl border border-slate-700 transition duration-200"
         >
           <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -107,7 +107,6 @@
           "
           class="space-y-4"
         >
-          <!-- Full Name -->
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
               >Full Name</label
@@ -121,7 +120,6 @@
             />
           </div>
 
-          <!-- Email -->
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
               >Work Email</label
@@ -140,7 +138,6 @@
             ></p>
           </div>
 
-          <!-- Phone with Built-in A-Z List -->
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
               >Phone Number</label
@@ -907,7 +904,7 @@
 
         <button
           type="button"
-          onclick="handleGoogleSignIn()"
+          id="googleSignInBtnLogin"
           class="w-full mb-4 flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-xl border border-slate-700 transition duration-200"
         >
           <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -1135,7 +1132,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <!-- Tier 1: Free -->
               <div
                 class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between"
               >
@@ -1169,7 +1165,6 @@
                 </button>
               </div>
 
-              <!-- Tier 2: Starter Pro -->
               <div
                 class="bg-slate-900 p-5 rounded-2xl border border-indigo-500/40 relative flex flex-col justify-between shadow-lg shadow-indigo-500/5"
               >
@@ -1210,7 +1205,6 @@
                 </button>
               </div>
 
-              <!-- Tier 3: Agency Growth -->
               <div
                 class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between"
               >
@@ -1249,7 +1243,6 @@
                 </button>
               </div>
 
-              <!-- Tier 4: Done-For-You Fix Service -->
               <div
                 class="bg-gradient-to-b from-indigo-950/40 to-slate-900 p-5 rounded-2xl border border-emerald-500/40 flex flex-col justify-between"
               >
@@ -1306,7 +1299,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
-          <!-- Free -->
           <div
             class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between"
           >
@@ -1336,7 +1328,6 @@
             </button>
           </div>
 
-          <!-- Starter Pro -->
           <div
             class="bg-slate-900 p-6 rounded-2xl border border-indigo-500/50 flex flex-col justify-between shadow-xl shadow-indigo-500/10"
           >
@@ -1372,7 +1363,6 @@
             </button>
           </div>
 
-          <!-- Agency Growth -->
           <div
             class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between"
           >
@@ -1406,7 +1396,6 @@
             </button>
           </div>
 
-          <!-- Fix Service -->
           <div
             class="bg-gradient-to-b from-indigo-950/40 to-slate-900 p-6 rounded-2xl border border-emerald-500/40 flex flex-col justify-between"
           >
