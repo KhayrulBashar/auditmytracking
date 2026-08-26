@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TrackMyAudit Pro - Advanced Analytics & Conversion Inspector</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body
+    class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between"
+  >
+    <!-- Navbar -->
+    <nav
+      class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"
+      >
+        <span class="text-xl sm:text-2xl font-black tracking-tight text-white"
+          >Track<span class="text-indigo-500">Audit</span> Pro</span
+        >
+        <div id="navAuthArea" class="flex items-center gap-3">
+          <button
+            onclick="showView('login')"
+            class="text-sm font-semibold text-slate-300 hover:text-white px-3 py-1.5 transition"
+          >
+            Login
+          </button>
+          <button
+            onclick="showView('signup')"
+            class="text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg transition"
+          >
+            Sign Up
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main
+      class="max-w-5xl mx-auto px-4 sm:px-6 py-10 w-full flex-grow flex items-center justify-center"
+    >
+      <!-- View 1: Sign Up Form -->
+      <div
+        id="viewSignup"
+        class="w-full max-w-md bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-2xl"
+      >
+        <h2 class="text-2xl font-bold text-white mb-2">Create Account</h2>
+        <p class="text-sm text-slate-400 mb-6">
+          Register to access enterprise tracking diagnostics.
+        </p>
+
+        <form
+          onsubmit="
+            event.preventDefault();
+            handleSignup();
+          "
+          class="space-y-4"
+        >
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1"
+                >First text-center</label
+              >
+              <input
+                id="suFirstName"
+                type="text"
+                placeholder="John"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1"
+                >Last text-center</label
+              >
+              <input
+                id="suLastName"
+                type="text"
+                placeholder="Doe"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1"
+              >Email</label
+            >
+            <input
+              id="suEmail"
+              type="email"
+              placeholder="name@company.com"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1"
+              >Phone</label
+            >
+            <input
+              id="suPhone"
+              type="tel"
+              placeholder="+1 (555) 000-0000"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1"
+              >Country</label
+            >
+            <input
+              id="suCountry"
+              type="text"
+              placeholder="United States"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+          <button
+            id="suBtn"
+            type="submit"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition duration-200"
+          >
+            Register & Send Code
+          </button>
+        </form>
+        <p class="text-xs text-center text-slate-400 mt-4">
+          Already registered?
+          <button
+            onclick="showView('login')"
+            class="text-indigo-400 hover:underline"
+          >
+            Log in with OTP
+          </button>
+        </p>
+      </div>
+
+      <!-- View 2: Login via Email OTP -->
+      <div
+        id="viewLogin"
+        class="w-full max-w-md bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-2xl hidden"
+      >
+        <h2 class="text-2xl font-bold text-white mb-2">Passwordless Login</h2>
+        <p class="text-sm text-slate-400 mb-6">
+          Enter your email to receive a One-Time Passcode (OTP).
+        </p>
+
+        <div id="loginStepEmail" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1"
+              >Account Email</label
+            >
+            <input
+              id="loginEmail"
+              type="email"
+              placeholder="name@company.com"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+          <button
+            id="otpSendBtn"
+            onclick="requestOtp()"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition"
+          >
+            Send OTP Code
+          </button>
+        </div>
+
+        <div id="loginStepOtp" class="space-y-4 hidden">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1"
+              >Enter 6-Digit Email OTP</label
+            >
+            <input
+              id="loginOtp"
+              type="text"
+              maxlength="6"
+              placeholder="123456"
+              class="w-full text-center tracking-widest text-xl font-mono bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+          <button
+            id="otpVerifyBtn"
+            onclick="verifyOtp()"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition"
+          >
+            Verify & Sign In
+          </button>
+        </div>
+
+        <p class="text-xs text-center text-slate-400 mt-4">
+          Need an account?
+          <button
+            onclick="showView('signup')"
+            class="text-indigo-400 hover:underline"
+          >
+            Sign up
+          </button>
+        </p>
+      </div>
+
+      <!-- View 3: App Dashboard & Audit Workspace -->
+      <div id="viewDashboard" class="w-full space-y-8 hidden">
+        <div class="text-center max-w-2xl mx-auto">
+          <h1 class="text-3xl sm:text-4xl font-black text-white">
+            Tracking & Attribution Audit
+          </h1>
+          <p class="text-slate-400 mt-2 text-sm sm:text-base">
+            Deep technical scan for GTM, Consent Mode v2, Meta CAPI, and DNS
+            records.
+          </p>
+        </div>
+
+        <div
+          class="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 shadow-2xl"
+        >
+          <form
+            onsubmit="
+              event.preventDefault();
+              runAudit();
+            "
+            class="flex flex-col sm:flex-row gap-3"
+          >
+            <input
+              id="targetUrl"
+              type="url"
+              placeholder="https://example.com"
+              class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+            <button
+              id="auditBtn"
+              type="submit"
+              class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition"
+            >
+              Run Audit
+            </button>
+          </form>
+          <p
+            id="statusMsg"
+            class="text-xs text-indigo-400 mt-3 hidden animate-pulse"
+          >
+            Running live network payload inspection...
+          </p>
+        </div>
+
+        <!-- Audit Results Container -->
+        <div id="results" class="space-y-6 hidden">
+          <div
+            class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+          >
+            <div>
+              <span class="text-xs uppercase font-semibold text-slate-500"
+                >Audited Endpoint</span
+              >
+              <p
+                id="siteTested"
+                class="text-slate-200 font-semibold break-all"
+              ></p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs uppercase font-semibold text-slate-500"
+                >Health Score</span
+              >
+              <div
+                id="overallScore"
+                class="text-3xl font-black text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20"
+              >
+                85/100
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl"
+          >
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead
+                  class="bg-slate-950 text-slate-400 border-b border-slate-800"
+                >
+                  <tr>
+                    <th class="p-4 font-semibold">Check Point</th>
+                    <th class="p-4 font-semibold">Status</th>
+                    <th class="p-4 font-semibold">
+                      Diagnostic Findings & Recommendations
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="auditRows"
+                  class="divide-y divide-slate-800 text-slate-300"
+                ></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer
+      class="border-t border-slate-800 py-4 text-center text-xs text-slate-500"
+    >
+      © 2026 AuditMyTracking. All rights reserved.
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
