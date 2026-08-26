@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TrackMyAudit Pro - Advanced Analytics & Conversion Inspector</title>
+    <title>AuditMyTracking - Advanced Analytics & Conversion Inspector</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body
-    class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between"
+    class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white"
   >
     <!-- Navbar -->
     <nav
@@ -19,17 +19,29 @@
       <div
         class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"
       >
-        <span class="text-xl sm:text-2xl font-black tracking-tight text-white"
-          >Track<span class="text-indigo-500">Audit</span> Pro</span
+        <span
+          onclick="showView('dashboard')"
+          class="text-xl sm:text-2xl font-black tracking-tight text-white cursor-pointer"
         >
+          Audit<span class="text-indigo-500">MyTracking</span>
+        </span>
         <div id="navAuthArea" class="flex items-center gap-3">
           <button
+            type="button"
+            onclick="showView('pricing')"
+            class="text-sm font-semibold text-slate-300 hover:text-white px-3 py-1.5 transition"
+          >
+            Pricing & Services
+          </button>
+          <button
+            type="button"
             onclick="showView('login')"
             class="text-sm font-semibold text-slate-300 hover:text-white px-3 py-1.5 transition"
           >
             Login
           </button>
           <button
+            type="button"
             onclick="showView('signup')"
             class="text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg transition"
           >
@@ -40,7 +52,7 @@
     </nav>
 
     <main
-      class="max-w-5xl mx-auto px-4 sm:px-6 py-10 w-full flex-grow flex items-center justify-center"
+      class="max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full flex-grow flex items-center justify-center"
     >
       <!-- View 1: Sign Up Form -->
       <div
@@ -52,6 +64,42 @@
           Register to access enterprise tracking diagnostics.
         </p>
 
+        <!-- Google OAuth Button -->
+        <button
+          type="button"
+          onclick="handleGoogleSignIn()"
+          class="w-full mb-4 flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-xl border border-slate-700 transition duration-200"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path
+              fill="#EA4335"
+              d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.2 9 5 12 5z"
+            />
+            <path
+              fill="#4285F4"
+              d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.2-6.4-5.2L1.9 17C3.7 20.7 7.5 24 12 24z"
+            />
+          </svg>
+          Continue with Google
+        </button>
+
+        <div class="relative flex py-2 items-center mb-4">
+          <div class="flex-grow border-t border-slate-800"></div>
+          <span
+            class="flex-shrink mx-4 text-xs uppercase text-slate-500 font-semibold"
+            >Or with Email</span
+          >
+          <div class="flex-grow border-t border-slate-800"></div>
+        </div>
+
         <form
           onsubmit="
             event.preventDefault();
@@ -59,72 +107,778 @@
           "
           class="space-y-4"
         >
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1"
-                >First text-center</label
-              >
-              <input
-                id="suFirstName"
-                type="text"
-                placeholder="John"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1"
-                >Last text-center</label
-              >
-              <input
-                id="suLastName"
-                type="text"
-                placeholder="Doe"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              />
-            </div>
-          </div>
+          <!-- Full Name -->
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
-              >Email</label
+              >Full Name</label
+            >
+            <input
+              id="suFullName"
+              type="text"
+              placeholder="Type Full Name"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1"
+              >Work Email</label
             >
             <input
               id="suEmail"
               type="email"
-              placeholder="name@company.com"
+              oninput="validateEmailLive()"
+              placeholder="Type Valid Work Email"
               class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
+            <p
+              id="emailWarning"
+              class="text-[11px] text-rose-400 mt-1 hidden"
+            ></p>
           </div>
+
+          <!-- Phone with Built-in A-Z List -->
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
-              >Phone</label
+              >Phone Number</label
             >
-            <input
-              id="suPhone"
-              type="tel"
-              placeholder="+1 (555) 000-0000"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              required
-            />
+            <div class="flex gap-2">
+              <select
+                id="suCountrySelect"
+                onchange="onCountryChanged()"
+                class="w-48 bg-slate-950 border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              >
+                <option
+                  value="United States"
+                  data-code="+1"
+                  data-min="10"
+                  data-max="10"
+                  selected
+                >
+                  🇺🇸 +1 (US)
+                </option>
+                <option
+                  value="United Kingdom"
+                  data-code="+44"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇬🇧 +44 (UK)
+                </option>
+                <option
+                  value="Canada"
+                  data-code="+1"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇨🇦 +1 (CA)
+                </option>
+                <option
+                  value="Australia"
+                  data-code="+61"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇦🇺 +61 (AU)
+                </option>
+                <option
+                  value="Bangladesh"
+                  data-code="+880"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇧🇩 +880 (BD)
+                </option>
+                <option
+                  value="India"
+                  data-code="+91"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇮🇳 +91 (IN)
+                </option>
+                <option
+                  value="United Arab Emirates"
+                  data-code="+971"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇦🇪 +971 (UAE)
+                </option>
+                <option
+                  value="Germany"
+                  data-code="+49"
+                  data-min="10"
+                  data-max="11"
+                >
+                  🇩🇪 +49 (DE)
+                </option>
+                <option disabled>──────────</option>
+                <option
+                  value="Afghanistan"
+                  data-code="+93"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇦🇫 +93 Afghanistan
+                </option>
+                <option
+                  value="Albania"
+                  data-code="+355"
+                  data-min="8"
+                  data-max="9"
+                >
+                  🇦🇱 +355 Albania
+                </option>
+                <option
+                  value="Algeria"
+                  data-code="+213"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇩🇿 +213 Algeria
+                </option>
+                <option
+                  value="Andorra"
+                  data-code="+376"
+                  data-min="6"
+                  data-max="6"
+                >
+                  🇦🇩 +376 Andorra
+                </option>
+                <option
+                  value="Angola"
+                  data-code="+244"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇦🇴 +244 Angola
+                </option>
+                <option
+                  value="Argentina"
+                  data-code="+54"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇦🇷 +54 Argentina
+                </option>
+                <option
+                  value="Armenia"
+                  data-code="+374"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇦🇲 +374 Armenia
+                </option>
+                <option
+                  value="Austria"
+                  data-code="+43"
+                  data-min="10"
+                  data-max="11"
+                >
+                  🇦🇹 +43 Austria
+                </option>
+                <option
+                  value="Azerbaijan"
+                  data-code="+994"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇦🇿 +994 Azerbaijan
+                </option>
+                <option
+                  value="Bahrain"
+                  data-code="+973"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇧🇭 +973 Bahrain
+                </option>
+                <option
+                  value="Belarus"
+                  data-code="+375"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇧🇾 +375 Belarus
+                </option>
+                <option
+                  value="Belgium"
+                  data-code="+32"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇧🇪 +32 Belgium
+                </option>
+                <option
+                  value="Belize"
+                  data-code="+501"
+                  data-min="7"
+                  data-max="7"
+                >
+                  🇧🇿 +501 Belize
+                </option>
+                <option
+                  value="Benin"
+                  data-code="+229"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇧🇯 +229 Benin
+                </option>
+                <option
+                  value="Bhutan"
+                  data-code="+975"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇧🇹 +975 Bhutan
+                </option>
+                <option
+                  value="Bolivia"
+                  data-code="+591"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇧🇴 +591 Bolivia
+                </option>
+                <option
+                  value="Bosnia and Herzegovina"
+                  data-code="+387"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇧🇦 +387 Bosnia
+                </option>
+                <option
+                  value="Brazil"
+                  data-code="+55"
+                  data-min="10"
+                  data-max="11"
+                >
+                  🇧🇷 +55 Brazil
+                </option>
+                <option
+                  value="Bulgaria"
+                  data-code="+359"
+                  data-min="8"
+                  data-max="9"
+                >
+                  🇧🇬 +359 Bulgaria
+                </option>
+                <option
+                  value="Cambodia"
+                  data-code="+855"
+                  data-min="8"
+                  data-max="9"
+                >
+                  🇰🇭 +855 Cambodia
+                </option>
+                <option
+                  value="Cameroon"
+                  data-code="+237"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇨🇲 +237 Cameroon
+                </option>
+                <option value="Chile" data-code="+56" data-min="9" data-max="9">
+                  🇨🇱 +56 Chile
+                </option>
+                <option
+                  value="China"
+                  data-code="+86"
+                  data-min="11"
+                  data-max="11"
+                >
+                  🇨🇳 +86 China
+                </option>
+                <option
+                  value="Colombia"
+                  data-code="+57"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇨🇴 +57 Colombia
+                </option>
+                <option
+                  value="Costa Rica"
+                  data-code="+506"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇨🇷 +506 Costa Rica
+                </option>
+                <option
+                  value="Croatia"
+                  data-code="+385"
+                  data-min="8"
+                  data-max="9"
+                >
+                  🇭🇷 +385 Croatia
+                </option>
+                <option
+                  value="Cyprus"
+                  data-code="+357"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇨🇾 +357 Cyprus
+                </option>
+                <option
+                  value="Czech Republic"
+                  data-code="+420"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇨🇿 +420 Czech Rep.
+                </option>
+                <option
+                  value="Denmark"
+                  data-code="+45"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇩🇰 +45 Denmark
+                </option>
+                <option
+                  value="Egypt"
+                  data-code="+20"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇪🇬 +20 Egypt
+                </option>
+                <option
+                  value="Estonia"
+                  data-code="+372"
+                  data-min="7"
+                  data-max="8"
+                >
+                  🇪🇪 +372 Estonia
+                </option>
+                <option
+                  value="Finland"
+                  data-code="+358"
+                  data-min="9"
+                  data-max="10"
+                >
+                  🇫🇮 +358 Finland
+                </option>
+                <option
+                  value="France"
+                  data-code="+33"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇫🇷 +33 France
+                </option>
+                <option
+                  value="Georgia"
+                  data-code="+995"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇬🇪 +995 Georgia
+                </option>
+                <option
+                  value="Ghana"
+                  data-code="+233"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇬🇭 +233 Ghana
+                </option>
+                <option
+                  value="Greece"
+                  data-code="+30"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇬🇷 +30 Greece
+                </option>
+                <option
+                  value="Hong Kong"
+                  data-code="+852"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇭🇰 +852 Hong Kong
+                </option>
+                <option
+                  value="Hungary"
+                  data-code="+36"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇭🇺 +36 Hungary
+                </option>
+                <option
+                  value="Iceland"
+                  data-code="+354"
+                  data-min="7"
+                  data-max="7"
+                >
+                  🇮🇸 +354 Iceland
+                </option>
+                <option
+                  value="Indonesia"
+                  data-code="+62"
+                  data-min="10"
+                  data-max="12"
+                >
+                  🇮🇩 +62 Indonesia
+                </option>
+                <option
+                  value="Ireland"
+                  data-code="+353"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇮🇪 +353 Ireland
+                </option>
+                <option
+                  value="Israel"
+                  data-code="+972"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇮🇱 +972 Israel
+                </option>
+                <option
+                  value="Italy"
+                  data-code="+39"
+                  data-min="9"
+                  data-max="10"
+                >
+                  🇮🇹 +39 Italy
+                </option>
+                <option
+                  value="Japan"
+                  data-code="+81"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇯🇵 +81 Japan
+                </option>
+                <option
+                  value="Jordan"
+                  data-code="+962"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇯🇴 +962 Jordan
+                </option>
+                <option
+                  value="Kazakhstan"
+                  data-code="+7"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇰🇿 +7 Kazakhstan
+                </option>
+                <option
+                  value="Kenya"
+                  data-code="+254"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇰🇪 +254 Kenya
+                </option>
+                <option
+                  value="Kuwait"
+                  data-code="+965"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇰🇼 +965 Kuwait
+                </option>
+                <option
+                  value="Latvia"
+                  data-code="+371"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇱🇻 +371 Latvia
+                </option>
+                <option
+                  value="Lebanon"
+                  data-code="+961"
+                  data-min="7"
+                  data-max="8"
+                >
+                  🇱🇧 +961 Lebanon
+                </option>
+                <option
+                  value="Lithuania"
+                  data-code="+370"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇱🇹 +370 Lithuania
+                </option>
+                <option
+                  value="Luxembourg"
+                  data-code="+352"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇱🇺 +352 Luxembourg
+                </option>
+                <option
+                  value="Malaysia"
+                  data-code="+60"
+                  data-min="9"
+                  data-max="10"
+                >
+                  🇲🇾 +60 Malaysia
+                </option>
+                <option
+                  value="Maldives"
+                  data-code="+960"
+                  data-min="7"
+                  data-max="7"
+                >
+                  🇲🇻 +960 Maldives
+                </option>
+                <option
+                  value="Malta"
+                  data-code="+356"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇲🇹 +356 Malta
+                </option>
+                <option
+                  value="Mexico"
+                  data-code="+52"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇲🇽 +52 Mexico
+                </option>
+                <option
+                  value="Morocco"
+                  data-code="+212"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇲🇦 +212 Morocco
+                </option>
+                <option
+                  value="Nepal"
+                  data-code="+977"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇳🇵 +977 Nepal
+                </option>
+                <option
+                  value="Netherlands"
+                  data-code="+31"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇳🇱 +31 Netherlands
+                </option>
+                <option
+                  value="New Zealand"
+                  data-code="+64"
+                  data-min="8"
+                  data-max="10"
+                >
+                  🇳🇿 +64 New Zealand
+                </option>
+                <option
+                  value="Nigeria"
+                  data-code="+234"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇳🇬 +234 Nigeria
+                </option>
+                <option
+                  value="Norway"
+                  data-code="+47"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇳🇴 +47 Norway
+                </option>
+                <option value="Oman" data-code="+968" data-min="8" data-max="8">
+                  🇴🇲 +968 Oman
+                </option>
+                <option
+                  value="Pakistan"
+                  data-code="+92"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇵🇰 +92 Pakistan
+                </option>
+                <option
+                  value="Philippines"
+                  data-code="+63"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇵🇭 +63 Philippines
+                </option>
+                <option
+                  value="Poland"
+                  data-code="+48"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇵🇱 +48 Poland
+                </option>
+                <option
+                  value="Portugal"
+                  data-code="+351"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇵🇹 +351 Portugal
+                </option>
+                <option
+                  value="Qatar"
+                  data-code="+974"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇶🇦 +974 Qatar
+                </option>
+                <option
+                  value="Romania"
+                  data-code="+40"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇷🇴 +40 Romania
+                </option>
+                <option
+                  value="Saudi Arabia"
+                  data-code="+966"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇸🇦 +966 Saudi Arabia
+                </option>
+                <option
+                  value="Singapore"
+                  data-code="+65"
+                  data-min="8"
+                  data-max="8"
+                >
+                  🇸🇬 +65 Singapore
+                </option>
+                <option
+                  value="South Africa"
+                  data-code="+27"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇿🇦 +27 South Africa
+                </option>
+                <option
+                  value="South Korea"
+                  data-code="+82"
+                  data-min="9"
+                  data-max="10"
+                >
+                  🇰🇷 +82 South Korea
+                </option>
+                <option value="Spain" data-code="+34" data-min="9" data-max="9">
+                  🇪🇸 +34 Spain
+                </option>
+                <option
+                  value="Sri Lanka"
+                  data-code="+94"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇱🇰 +94 Sri Lanka
+                </option>
+                <option
+                  value="Sweden"
+                  data-code="+46"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇸🇪 +46 Sweden
+                </option>
+                <option
+                  value="Switzerland"
+                  data-code="+41"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇨🇭 +41 Switzerland
+                </option>
+                <option
+                  value="Taiwan"
+                  data-code="+886"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇹🇼 +886 Taiwan
+                </option>
+                <option
+                  value="Thailand"
+                  data-code="+66"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇹🇭 +66 Thailand
+                </option>
+                <option
+                  value="Turkey"
+                  data-code="+90"
+                  data-min="10"
+                  data-max="10"
+                >
+                  🇹🇷 +90 Turkey
+                </option>
+                <option
+                  value="Ukraine"
+                  data-code="+380"
+                  data-min="9"
+                  data-max="9"
+                >
+                  🇺🇦 +380 Ukraine
+                </option>
+                <option
+                  value="Vietnam"
+                  data-code="+84"
+                  data-min="9"
+                  data-max="10"
+                >
+                  🇻🇳 +84 Vietnam
+                </option>
+              </select>
+
+              <input
+                id="suPhone"
+                type="tel"
+                oninput="validatePhoneLive()"
+                placeholder="123456789"
+                class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                required
+              />
+            </div>
+            <p
+              id="phoneWarning"
+              class="text-[11px] text-rose-400 mt-1 hidden"
+            ></p>
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1"
-              >Country</label
-            >
-            <input
-              id="suCountry"
-              type="text"
-              placeholder="United States"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              required
-            />
-          </div>
+
           <button
             id="suBtn"
             type="submit"
-            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition duration-200"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/20"
           >
             Register & Send Code
           </button>
@@ -132,6 +886,7 @@
         <p class="text-xs text-center text-slate-400 mt-4">
           Already registered?
           <button
+            type="button"
             onclick="showView('login')"
             class="text-indigo-400 hover:underline"
           >
@@ -147,8 +902,43 @@
       >
         <h2 class="text-2xl font-bold text-white mb-2">Passwordless Login</h2>
         <p class="text-sm text-slate-400 mb-6">
-          Enter your email to receive a One-Time Passcode (OTP).
+          Sign in instantly with Google or enter your email.
         </p>
+
+        <button
+          type="button"
+          onclick="handleGoogleSignIn()"
+          class="w-full mb-4 flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-xl border border-slate-700 transition duration-200"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path
+              fill="#EA4335"
+              d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.2 9 5 12 5z"
+            />
+            <path
+              fill="#4285F4"
+              d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.2-6.4-5.2L1.9 17C3.7 20.7 7.5 24 12 24z"
+            />
+          </svg>
+          Continue with Google
+        </button>
+
+        <div class="relative flex py-2 items-center mb-4">
+          <div class="flex-grow border-t border-slate-800"></div>
+          <span
+            class="flex-shrink mx-4 text-xs uppercase text-slate-500 font-semibold"
+            >Or with Email OTP</span
+          >
+          <div class="flex-grow border-t border-slate-800"></div>
+        </div>
 
         <div id="loginStepEmail" class="space-y-4">
           <div>
@@ -158,12 +948,13 @@
             <input
               id="loginEmail"
               type="email"
-              placeholder="name@company.com"
+              placeholder="Type Valid Work Email"
               class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
           </div>
           <button
+            type="button"
             id="otpSendBtn"
             onclick="requestOtp()"
             class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition"
@@ -187,6 +978,7 @@
             />
           </div>
           <button
+            type="button"
             id="otpVerifyBtn"
             onclick="verifyOtp()"
             class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition"
@@ -198,6 +990,7 @@
         <p class="text-xs text-center text-slate-400 mt-4">
           Need an account?
           <button
+            type="button"
             onclick="showView('signup')"
             class="text-indigo-400 hover:underline"
           >
@@ -219,7 +1012,7 @@
         </div>
 
         <div
-          class="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 shadow-2xl"
+          class="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 shadow-2xl max-w-3xl mx-auto"
         >
           <form
             onsubmit="
@@ -231,7 +1024,7 @@
             <input
               id="targetUrl"
               type="url"
-              placeholder="https://example.com"
+              placeholder="https://yourstore.com"
               class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
@@ -252,7 +1045,7 @@
         </div>
 
         <!-- Audit Results Container -->
-        <div id="results" class="space-y-6 hidden">
+        <div id="results" class="space-y-8 hidden">
           <div
             class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
           >
@@ -262,7 +1055,7 @@
               >
               <p
                 id="siteTested"
-                class="text-slate-200 font-semibold break-all"
+                class="text-slate-200 font-semibold break-all text-lg"
               ></p>
             </div>
             <div class="flex items-center gap-3">
@@ -271,9 +1064,9 @@
               >
               <div
                 id="overallScore"
-                class="text-3xl font-black text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20"
+                class="text-3xl font-black text-amber-400 bg-amber-500/10 px-4 py-1.5 rounded-xl border border-amber-500/20"
               >
-                85/100
+                68/100
               </div>
             </div>
           </div>
@@ -281,6 +1074,33 @@
           <div
             class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl"
           >
+            <div
+              class="p-4 border-b border-slate-800 flex justify-between items-center"
+            >
+              <h3 class="font-bold text-white text-base">
+                Diagnostic Findings
+              </h3>
+              <button
+                type="button"
+                onclick="promptUpgrade('White-label PDF Report')"
+                class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-indigo-300 font-semibold px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Export White-Label PDF (Pro)
+              </button>
+            </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm">
                 <thead
@@ -290,7 +1110,7 @@
                     <th class="p-4 font-semibold">Check Point</th>
                     <th class="p-4 font-semibold">Status</th>
                     <th class="p-4 font-semibold">
-                      Diagnostic Findings & Recommendations
+                      Diagnostic Findings & Action Needed
                     </th>
                   </tr>
                 </thead>
@@ -300,6 +1120,326 @@
                 ></tbody>
               </table>
             </div>
+          </div>
+
+          <!-- Pricing Grid Section -->
+          <div id="pricingGridAnchor" class="pt-6">
+            <div class="text-center mb-6">
+              <h2 class="text-2xl sm:text-3xl font-black text-white">
+                Fix Tracking Errors & Unlock Full Attribution
+              </h2>
+              <p class="text-slate-400 text-sm mt-1">
+                Choose a plan to get detailed developer blueprints or have our
+                analytics team fix it for you.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <!-- Tier 1: Free -->
+              <div
+                class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between"
+              >
+                <div>
+                  <span class="text-xs uppercase font-bold text-slate-500"
+                    >Tier 1</span
+                  >
+                  <h4 class="text-xl font-bold text-white mt-1">Free Tier</h4>
+                  <div class="text-2xl font-black text-white my-3">$0</div>
+                  <p class="text-xs text-slate-400 mb-4">
+                    Best for initial quick checks & health score overview.
+                  </p>
+                  <ul class="text-xs space-y-2 text-slate-300">
+                    <li class="flex items-center gap-2">
+                      ✓ High-level health score
+                    </li>
+                    <li class="flex items-center gap-2">
+                      ✓ Pass/Fail diagnostics
+                    </li>
+                    <li class="flex items-center gap-2">
+                      ✓ Basic tracking detection
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  disabled
+                  class="w-full mt-6 bg-slate-800 text-slate-400 font-semibold py-2 rounded-xl text-xs cursor-default"
+                >
+                  Current Tier
+                </button>
+              </div>
+
+              <!-- Tier 2: Starter Pro -->
+              <div
+                class="bg-slate-900 p-5 rounded-2xl border border-indigo-500/40 relative flex flex-col justify-between shadow-lg shadow-indigo-500/5"
+              >
+                <span
+                  class="absolute -top-2.5 right-4 bg-indigo-600 text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full"
+                  >Popular</span
+                >
+                <div>
+                  <span class="text-xs uppercase font-bold text-indigo-400"
+                    >Tier 2</span
+                  >
+                  <h4 class="text-xl font-bold text-white mt-1">Starter Pro</h4>
+                  <div class="text-2xl font-black text-white my-3">
+                    $29
+                    <span class="text-xs text-slate-400 font-normal">/ mo</span>
+                  </div>
+                  <p class="text-xs text-slate-400 mb-4">
+                    For e-commerce store owners and independent marketers.
+                  </p>
+                  <ul class="text-xs space-y-2 text-slate-300">
+                    <li class="flex items-center gap-2">
+                      ✓ Step-by-step fixing guides
+                    </li>
+                    <li class="flex items-center gap-2">
+                      ✓ Detailed network error logs
+                    </li>
+                    <li class="flex items-center gap-2">
+                      ✓ Automated break alerts
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  onclick="handlePlanSelection('Starter Pro ($29/mo)')"
+                  class="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 rounded-xl text-xs transition"
+                >
+                  Upgrade to Pro
+                </button>
+              </div>
+
+              <!-- Tier 3: Agency Growth -->
+              <div
+                class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between"
+              >
+                <div>
+                  <span class="text-xs uppercase font-bold text-slate-400"
+                    >Tier 3</span
+                  >
+                  <h4 class="text-xl font-bold text-white mt-1">
+                    Agency Growth
+                  </h4>
+                  <div class="text-2xl font-black text-white my-3">
+                    $89
+                    <span class="text-xs text-slate-400 font-normal">/ mo</span>
+                  </div>
+                  <p class="text-xs text-slate-400 mb-4">
+                    For digital marketing agencies and power auditors.
+                  </p>
+                  <ul class="text-xs space-y-2 text-slate-300">
+                    <li class="flex items-center gap-2">
+                      ✓ White-Label PDF export
+                    </li>
+                    <li class="flex items-center gap-2">
+                      ✓ Unlimited domain scanning
+                    </li>
+                    <li class="flex items-center gap-2">
+                      ✓ Team access (5 seats)
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  onclick="handlePlanSelection('Agency Growth ($89/mo)')"
+                  class="w-full mt-6 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2 rounded-xl text-xs transition border border-slate-700"
+                >
+                  Select Agency
+                </button>
+              </div>
+
+              <!-- Tier 4: Done-For-You Fix Service -->
+              <div
+                class="bg-gradient-to-b from-indigo-950/40 to-slate-900 p-5 rounded-2xl border border-emerald-500/40 flex flex-col justify-between"
+              >
+                <div>
+                  <span class="text-xs uppercase font-bold text-emerald-400"
+                    >Add-on Service</span
+                  >
+                  <h4 class="text-xl font-bold text-white mt-1">Fix Service</h4>
+                  <div class="text-2xl font-black text-emerald-400 my-3">
+                    $250 - $450
+                    <span class="text-xs text-slate-400 font-normal"
+                      >one-time</span
+                    >
+                  </div>
+                  <p class="text-xs text-slate-400 mb-4">
+                    Don't want to fix it yourself? Our team configures
+                    everything.
+                  </p>
+                  <ul class="text-xs space-y-2 text-slate-300">
+                    <li class="flex items-center gap-2">
+                      ✓ Full GTM Web & Server setup
+                    </li>
+                    <li class="flex items-center gap-2">
+                      ✓ Meta CAPI Deduplication
+                    </li>
+                    <li class="flex items-center gap-2">
+                      ✓ Google Consent Mode v2
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  onclick="handlePlanSelection('Done-For-You Fix Service')"
+                  class="w-full mt-6 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-xl text-xs transition shadow-lg shadow-emerald-600/20"
+                >
+                  Book Tracking Fix
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 4: Standalone Pricing Page View -->
+      <div id="viewPricing" class="w-full space-y-8 hidden max-w-5xl">
+        <div class="text-center max-w-2xl mx-auto">
+          <h1 class="text-3xl sm:text-4xl font-black text-white">
+            Transparent Pricing & Services
+          </h1>
+          <p class="text-slate-400 mt-2 text-sm sm:text-base">
+            From automated health auditing to complete enterprise Server-Side
+            tracking deployment.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
+          <!-- Free -->
+          <div
+            class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between"
+          >
+            <div>
+              <span class="text-xs uppercase font-bold text-slate-500"
+                >Tier 1</span
+              >
+              <h4 class="text-xl font-bold text-white mt-1">Free Tier</h4>
+              <div class="text-3xl font-black text-white my-3">$0</div>
+              <p class="text-xs text-slate-400 mb-4">
+                High-level health scores & pass/fail diagnostics.
+              </p>
+              <ul class="text-xs space-y-2.5 text-slate-300">
+                <li class="flex items-center gap-2">✓ Instant URL scan</li>
+                <li class="flex items-center gap-2">
+                  ✓ Pass / Fail indicators
+                </li>
+                <li class="flex items-center gap-2">✓ Basic signal check</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              onclick="showView('dashboard')"
+              class="w-full mt-6 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-xl text-xs transition border border-slate-700"
+            >
+              Start Free Audit
+            </button>
+          </div>
+
+          <!-- Starter Pro -->
+          <div
+            class="bg-slate-900 p-6 rounded-2xl border border-indigo-500/50 flex flex-col justify-between shadow-xl shadow-indigo-500/10"
+          >
+            <div>
+              <span class="text-xs uppercase font-bold text-indigo-400"
+                >Tier 2</span
+              >
+              <h4 class="text-xl font-bold text-white mt-1">Starter Pro</h4>
+              <div class="text-3xl font-black text-white my-3">
+                $29 <span class="text-xs text-slate-400 font-normal">/ mo</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-4">
+                Fixing guides, error logs, and proactive monitoring.
+              </p>
+              <ul class="text-xs space-y-2.5 text-slate-300">
+                <li class="flex items-center gap-2">
+                  ✓ Step-by-step fix guides
+                </li>
+                <li class="flex items-center gap-2">
+                  ✓ Full diagnostic payloads
+                </li>
+                <li class="flex items-center gap-2">
+                  ✓ Automated break alerts
+                </li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              onclick="handlePlanSelection('Starter Pro ($29/mo)')"
+              class="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-lg shadow-indigo-600/20"
+            >
+              Get Started
+            </button>
+          </div>
+
+          <!-- Agency Growth -->
+          <div
+            class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between"
+          >
+            <div>
+              <span class="text-xs uppercase font-bold text-slate-400"
+                >Tier 3</span
+              >
+              <h4 class="text-xl font-bold text-white mt-1">Agency Growth</h4>
+              <div class="text-3xl font-black text-white my-3">
+                $89 <span class="text-xs text-slate-400 font-normal">/ mo</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-4">
+                White-label PDF exports, unlimited scans & multi-seat access.
+              </p>
+              <ul class="text-xs space-y-2.5 text-slate-300">
+                <li class="flex items-center gap-2">
+                  ✓ Branded White-Label PDFs
+                </li>
+                <li class="flex items-center gap-2">
+                  ✓ Unlimited website audits
+                </li>
+                <li class="flex items-center gap-2">✓ Up to 5 team members</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              onclick="handlePlanSelection('Agency Growth ($89/mo)')"
+              class="w-full mt-6 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-xl text-xs transition border border-slate-700"
+            >
+              Subscribe Agency
+            </button>
+          </div>
+
+          <!-- Fix Service -->
+          <div
+            class="bg-gradient-to-b from-indigo-950/40 to-slate-900 p-6 rounded-2xl border border-emerald-500/40 flex flex-col justify-between"
+          >
+            <div>
+              <span class="text-xs uppercase font-bold text-emerald-400"
+                >Turnkey Service</span
+              >
+              <h4 class="text-xl font-bold text-white mt-1">Fix Service</h4>
+              <div class="text-3xl font-black text-emerald-400 my-3">
+                $250 - $450
+                <span class="text-xs text-slate-400 font-normal">one-time</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-4">
+                Complete GTM Web/Server setup, CAPI deduplication & Consent
+                Mode.
+              </p>
+              <ul class="text-xs space-y-2.5 text-slate-300">
+                <li class="flex items-center gap-2">
+                  ✓ Done-for-you technical setup
+                </li>
+                <li class="flex items-center gap-2">
+                  ✓ NetSuite, Shopify, WooCommerce
+                </li>
+                <li class="flex items-center gap-2">✓ Full QA verification</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              onclick="handlePlanSelection('Done-For-You Fix Service')"
+              class="w-full mt-6 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-lg shadow-emerald-600/20"
+            >
+              Book Fix Service
+            </button>
           </div>
         </div>
       </div>
