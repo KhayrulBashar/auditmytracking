@@ -1,3 +1,6 @@
+// GTM DataLayer Initialization
+window.dataLayer = window.dataLayer || [];
+
 // Global Supabase Client
 window.sbClient = window.supabase.createClient(
   "https://flpmaegkhkxxaitlgglv.supabase.co",
@@ -19,6 +22,12 @@ const DISPOSABLE_DOMAINS = [
   "mailinator.com", "trashmail.com", "yopmail.com", "sharklasers.com",
   "dispostable.com", "getnada.com", "fakeinbox.com", "mohmal.com",
   "crazymailing.com", "throwawaymail.com", "burnermail.io", "tempail.com"
+];
+
+// ফেক ও ডামি ইমেইল ফিল্টারিং প্রিফিক্স
+const JUNK_EMAIL_PREFIXES = [
+  "test", "testing", "fake", "demo", "sample", "temp", "dummy", 
+  "trash", "spam", "user", "admin", "null", "abcd", "1234", "qwerty"
 ];
 
 // Helper: ফরম্যাট ছাড়া শুধু ক্লিন লিঙ্ক তৈরি
@@ -223,9 +232,9 @@ window.validateNameLive = function () {
   return true;
 };
 
-window.validateEmailLive = function () {
-  const emailInput = document.getElementById("suEmail");
-  const warningEl = document.getElementById("emailWarning");
+window.validateEmailLive = function (inputId = "suEmail", warningId = "emailWarning") {
+  const emailInput = document.getElementById(inputId);
+  const warningEl = document.getElementById(warningId);
   if (!emailInput || !warningEl) return true;
 
   const email = emailInput.value.trim().toLowerCase();
@@ -234,16 +243,29 @@ window.validateEmailLive = function () {
     return false;
   }
 
-  const domain = email.split("@")[1];
-  if (domain && DISPOSABLE_DOMAINS.includes(domain)) {
-    warningEl.innerText = "Temporary/Disposable emails are not allowed.";
+  const parts = email.split("@");
+  const username = parts[0] || "";
+  const domain = parts[1] || "";
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    warningEl.innerText = "Please enter a valid work email format.";
     warningEl.classList.remove("hidden");
     return false;
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    warningEl.innerText = "Please enter a valid work email.";
+  if (domain && DISPOSABLE_DOMAINS.includes(domain)) {
+    warningEl.innerText = "Temporary/Disposable emails are strictly not allowed.";
+    warningEl.classList.remove("hidden");
+    return false;
+  }
+
+  const isJunkPrefix = JUNK_EMAIL_PREFIXES.some(prefix => 
+    username === prefix || username.startsWith(prefix) || username.replace(/[0-9._-]/g, "") === prefix
+  );
+
+  if (isJunkPrefix) {
+    warningEl.innerText = "Test/Spam email addresses (e.g. test44@...) are rejected. Enter genuine email.";
     warningEl.classList.remove("hidden");
     return false;
   }
@@ -298,10 +320,12 @@ window.updateNavForLoggedInUser = function (showBookBtn = false) {
   }
 };
 
-// Sign Up Handler
+// ==========================================
+// 1. Sign Up Handler (LocalStorage + DataLayer)
+// ==========================================
 window.handleSignup = async function () {
   const isNameValid = window.validateNameLive();
-  const isEmailValid = window.validateEmailLive();
+  const isEmailValid = window.validateEmailLive("suEmail", "emailWarning");
   const isPhoneValid = window.validatePhoneLive("signup");
 
   if (!isNameValid) {
@@ -310,7 +334,7 @@ window.handleSignup = async function () {
   }
 
   if (!isEmailValid) {
-    alert("Please enter a valid work email before proceeding.");
+    alert("Please enter a genuine, valid work email before proceeding.");
     return;
   }
 
@@ -322,12 +346,24 @@ window.handleSignup = async function () {
 
   const selectEl = document.getElementById("suCountrySelect");
   const countryName = selectEl.options[selectEl.selectedIndex].value;
-
   const full_name = document.getElementById("suFullName").value.trim();
   const email = document.getElementById("suEmail").value.trim().toLowerCase();
   const fullPhone = document.getElementById("suPhone").value.trim();
-  const suBtn = document.getElementById("suBtn");
+  const cleanPhoneLink = toWhatsAppLink(fullPhone);
 
+  // LocalStorage ডুপ্লিকেট চেকিং
+  const existingSignupEmail = localStorage.getItem("signup_email");
+  const existingSignupPhone = localStorage.getItem("signup_phone");
+
+  if (existingSignupEmail === email || existingSignupPhone === cleanPhoneLink) {
+    alert("তুমি ইতিমধ্যেই সাইন আপ করেছ। এখন Login with OTP ক্লিক করো।");
+    window.showView("login");
+    const loginEmailInput = document.getElementById("loginEmail");
+    if (loginEmailInput) loginEmailInput.value = email;
+    return;
+  }
+
+  const suBtn = document.getElementById("suBtn");
   suBtn.innerText = "Sending Code...";
   suBtn.disabled = true;
 
@@ -341,7 +377,7 @@ window.handleSignup = async function () {
         name: full_name,
         email: email,
         country: countryName,
-        phone: toWhatsAppLink(fullPhone)
+        phone: cleanPhoneLink
       }),
     });
   } catch (e) {
@@ -353,7 +389,7 @@ window.handleSignup = async function () {
     options: {
       data: {
         full_name: full_name,
-        phone: toWhatsAppLink(fullPhone),
+        phone: cleanPhoneLink,
         country: countryName,
       },
     },
@@ -365,6 +401,23 @@ window.handleSignup = async function () {
   if (res.error) {
     alert("Signup Error: " + res.error.message);
   } else {
+    // LocalStorage-এ ইউজার ইনফো সংরক্ষণ
+    localStorage.setItem("signup_fullName", full_name);
+    localStorage.setItem("signup_email", email);
+    localStorage.setItem("signup_country", countryName);
+    localStorage.setItem("signup_phone", cleanPhoneLink);
+
+    // GTM DataLayer Push for Sign Up Event
+    window.dataLayer.push({
+      event: "sign_up_success",
+      user_data: {
+        name: full_name,
+        email: email,
+        phone: cleanPhoneLink,
+        country: countryName
+      }
+    });
+
     alert("Verification OTP has been sent to " + email);
     window.tempEmail = email;
     const loginEmailInput = document.getElementById("loginEmail");
@@ -978,8 +1031,16 @@ window.closeBookingModal = function () {
   if (modal) modal.classList.add("hidden");
 };
 
-// Booking Form Submit Handler
+// ==========================================
+// 2. Booking Submit Handler (LocalStorage + DataLayer)
+// ==========================================
 window.handleBookingSubmit = async function () {
+  const isEmailValid = window.validateEmailLive("bmEmail", "bmEmailWarning");
+  if (!isEmailValid) {
+    alert("Please enter a valid, non-spam work email.");
+    return;
+  }
+
   const isPhoneValid = window.validatePhoneLive("booking");
   if (!isPhoneValid) {
     const selectEl = document.getElementById("bmCountrySelect");
@@ -988,10 +1049,21 @@ window.handleBookingSubmit = async function () {
   }
 
   const name = document.getElementById("bmName").value.trim();
-  const email = document.getElementById("bmEmail").value.trim();
+  const email = document.getElementById("bmEmail").value.trim().toLowerCase();
   const fullWhatsApp = document.getElementById("bmWhatsApp").value.trim();
   const selectEl = document.getElementById("bmCountrySelect");
   const countryName = selectEl.options[selectEl.selectedIndex].value;
+  const formattedWhatsApp = toWhatsAppLink(fullWhatsApp);
+
+  // LocalStorage বুকিং ডুপ্লিকেট চেকিং
+  const existingBookingEmail = localStorage.getItem("booking_email");
+  const existingBookingPhone = localStorage.getItem("booking_phone");
+
+  if (existingBookingEmail === email || existingBookingPhone === formattedWhatsApp) {
+    alert("তুমি ইতিমধ্যেই বুকিং করেছ। আমাদের টিম খুব শীঘ্রই তোমার সাথে যোগাযোগ করবে।");
+    window.closeBookingModal();
+    return;
+  }
 
   const siteUrl = document.getElementById("bmSiteUrl").value.trim();
   const platform = document.getElementById("bmPlatform").value;
@@ -1007,7 +1079,7 @@ window.handleBookingSubmit = async function () {
     type: "booking",
     full_name: name,
     email: email,
-    whatsapp: toWhatsAppLink(fullWhatsApp),
+    whatsapp: formattedWhatsApp,
     country: countryName,
     website_url: siteUrl,
     platform: platform,
@@ -1032,6 +1104,23 @@ window.handleBookingSubmit = async function () {
   } catch (e) {
     console.error("Supabase Backup Error:", e);
   }
+
+  // LocalStorage-এ বুকিং তথ্য সংরক্ষণ
+  localStorage.setItem("booking_fullName", name);
+  localStorage.setItem("booking_email", email);
+  localStorage.setItem("booking_country", countryName);
+  localStorage.setItem("booking_phone", formattedWhatsApp);
+
+  // GTM DataLayer Push for Booking Request Event
+  window.dataLayer.push({
+    event: "booking_request_success",
+    user_data: {
+      name: name,
+      email: email,
+      phone: formattedWhatsApp,
+      country: countryName
+    }
+  });
 
   btn.disabled = false;
   btn.innerText = "Submit Booking Request";

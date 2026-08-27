@@ -1,10 +1,25 @@
 <!doctype html>
 <html lang="en" class="scroll-smooth">
   <head>
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-PRN6TH9J");
+    </script>
+    <!-- End Google Tag Manager -->
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- টেস্টিং চলাকালীন গুগল ও সার্চ ইঞ্জিন ইনডেক্সিং ব্লক রাখার কোড -->
+    <!-- টেস্টিং চলাকালীন সার্চ ইঞ্জিন ব্লকিং -->
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
     <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
 
@@ -34,6 +49,17 @@
   <body
     class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white"
   >
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-PRN6TH9J"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
     <!-- Navbar -->
     <nav
       class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50"
@@ -141,7 +167,7 @@
             <input
               id="suEmail"
               type="email"
-              oninput="window.validateEmailLive()"
+              oninput="window.validateEmailLive('suEmail', 'emailWarning')"
               placeholder="Type Valid Work Email"
               class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
@@ -830,7 +856,7 @@
       </div>
     </main>
 
-    <!-- Booking Modal (Full Platform, Custom Code & Forms List) -->
+    <!-- Booking Modal -->
     <div
       id="bookingModal"
       class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden"
@@ -885,10 +911,15 @@
             <input
               id="bmEmail"
               type="email"
+              oninput="window.validateEmailLive('bmEmail', 'bmEmailWarning')"
               placeholder="Type Valid Work Email"
               class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
+            <p
+              id="bmEmailWarning"
+              class="text-[11px] text-rose-400 mt-1 hidden"
+            ></p>
           </div>
 
           <div>
@@ -1095,7 +1126,7 @@
                   value="Japan"
                   data-code="+81"
                   data-min="10"
-                  data-max="11"
+                  data-max="10"
                 >
                   +81 (Japan)
                 </option>
@@ -1265,7 +1296,6 @@
                 id="bmPlatform"
                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
               >
-                <!-- E-commerce & Popular CMS -->
                 <optgroup label="CMS & E-Commerce">
                   <option value="Shopify">Shopify</option>
                   <option value="WooCommerce">WooCommerce</option>
@@ -1278,7 +1308,6 @@
                   <option value="BigCommerce">BigCommerce</option>
                   <option value="GoHighLevel (GHL)">GoHighLevel (GHL)</option>
                 </optgroup>
-                <!-- Custom Coding & Web Frameworks -->
                 <optgroup label="Custom / Frameworks">
                   <option value="Next.js">Next.js</option>
                   <option value="React">React</option>
