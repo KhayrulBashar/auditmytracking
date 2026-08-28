@@ -19,35 +19,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- টেস্টিং চলাকালীন সার্চ ইঞ্জিন ব্লকিং -->
+    <!-- Testing Mode: Search Engine Crawl Blocking -->
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
     <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
 
     <title>AuditMyTracking - Advanced Analytics & Conversion Inspector</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="app-icon.svg" />
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css" />
     <!-- Supabase JS Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- jsPDF & autoTable for Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <style>
-      @keyframes blinkCursor {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0;
-        }
-      }
-      .cursor-blink {
-        animation: blinkCursor 0.8s infinite;
-      }
-    </style>
   </head>
   <body
-    class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white"
+    class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950"
   >
     <!-- Google Tag Manager (noscript) -->
     <noscript
@@ -62,33 +52,31 @@
 
     <!-- Navbar -->
     <nav
-      class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50"
+      class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-50"
     >
       <div
-        class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"
+        class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between"
       >
-        <span
-          onclick="window.showView('dashboard')"
-          class="text-xl sm:text-2xl font-black tracking-tight text-white cursor-pointer"
+        <!-- Brand Logo Area with Protected Click -->
+        <div
+          onclick="window.handleLogoClick()"
+          class="flex items-center gap-3 cursor-pointer group"
         >
-          Audit<span class="text-indigo-500">MyTracking</span>
-        </span>
-        <div id="navAuthArea" class="flex items-center gap-3">
-          <button
-            type="button"
-            onclick="window.showView('login')"
-            class="text-sm font-semibold text-slate-300 hover:text-white px-3 py-1.5 transition cursor-pointer"
+          <img
+            src="app-icon.svg"
+            alt="AuditMyTracking Logo"
+            class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl shadow-lg border border-slate-700/60 p-0.5 bg-slate-900 group-hover:border-cyan-500/50 group-hover:scale-105 transition-all"
+          />
+          <span
+            class="text-2xl sm:text-3xl font-black tracking-tight text-white leading-none"
           >
-            Login
-          </button>
-          <button
-            type="button"
-            onclick="window.showView('signup')"
-            class="text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg transition cursor-pointer"
-          >
-            Sign Up
-          </button>
+            Audit<span class="text-indigo-500">My</span
+            ><span class="text-cyan-400">Tracking</span>
+          </span>
         </div>
+
+        <!-- Nav Auth Actions (Dynamic) -->
+        <div id="navAuthArea" class="flex items-center gap-3"></div>
       </div>
     </nav>
 
@@ -98,18 +86,22 @@
       <!-- View 1: Sign Up Form -->
       <div
         id="viewSignup"
-        class="w-full max-w-md bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-2xl"
+        class="w-full max-w-md bg-slate-900/90 p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden backdrop-blur-sm"
       >
+        <div
+          class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-400 to-indigo-500"
+        ></div>
         <h2 class="text-2xl font-bold text-white mb-2">Create Free Account</h2>
         <p class="text-sm text-slate-400 mb-6">
           Register to access free tracking diagnostics and reports.
         </p>
 
-        <!-- Google OAuth Button -->
+        <!-- Google OAuth Button for New Users -->
         <button
+          id="suGoogleBtn"
           type="button"
           onclick="window.handleGoogleSignIn()"
-          class="w-full mb-4 flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-xl border border-slate-700 transition duration-200 cursor-pointer"
+          class="w-full mb-4 flex items-center justify-center gap-3 bg-slate-800/80 hover:bg-slate-800 hover:border-cyan-500/40 text-white font-semibold py-2.5 rounded-xl border border-slate-700 transition duration-200 cursor-pointer shadow-md"
         >
           <svg class="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -132,7 +124,7 @@
           Continue with Google
         </button>
 
-        <div class="relative flex py-2 items-center mb-4">
+        <div id="suDivider" class="relative flex py-2 items-center mb-4">
           <div class="flex-grow border-t border-slate-800"></div>
           <span
             class="flex-shrink mx-4 text-xs uppercase text-slate-500 font-semibold"
@@ -151,7 +143,7 @@
               type="text"
               oninput="window.validateNameLive()"
               placeholder="Type Your Name"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition"
               required
             />
             <p
@@ -169,7 +161,7 @@
               type="email"
               oninput="window.validateEmailLive('suEmail', 'emailWarning')"
               placeholder="Type Valid Work Email"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition"
               required
             />
             <p
@@ -191,7 +183,7 @@
               <select
                 id="suCountrySelect"
                 onchange="window.onCountryChanged('signup')"
-                class="w-48 bg-slate-950 border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                class="w-48 bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
               >
                 <option
                   value="United States"
@@ -519,7 +511,7 @@
                 type="tel"
                 oninput="window.validatePhoneLive('signup')"
                 placeholder="+1 "
-                class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                class="flex-1 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono transition"
                 required
               />
             </div>
@@ -532,9 +524,9 @@
           <button
             id="suBtn"
             type="submit"
-            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/20 cursor-pointer"
+            class="w-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-cyan-600 text-white font-semibold py-3 rounded-xl transition-all duration-300 shadow-lg shadow-indigo-600/25 cursor-pointer"
           >
-            Register & Send Code
+            Register & Send Verification Code
           </button>
         </form>
         <p class="text-xs text-center text-slate-400 mt-4">
@@ -542,135 +534,169 @@
           <button
             type="button"
             onclick="window.showView('login')"
-            class="text-indigo-400 hover:underline"
+            class="text-cyan-400 font-medium hover:underline"
           >
-            Log in with OTP
+            Log in
           </button>
         </p>
       </div>
 
-      <!-- View 2: Login via Email OTP -->
+      <!-- View 2: Login View -->
       <div
         id="viewLogin"
-        class="w-full max-w-md bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-2xl hidden"
+        class="w-full max-w-md bg-slate-900/90 p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden hidden backdrop-blur-sm"
       >
-        <h2 class="text-2xl font-bold text-white mb-2">Passwordless Login</h2>
-        <p class="text-sm text-slate-400 mb-6">
-          Sign in instantly with Google or enter your email.
+        <div
+          class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-400 to-indigo-500"
+        ></div>
+        <h2 id="loginTitle" class="text-2xl font-bold text-white mb-2">
+          Welcome Back
+        </h2>
+        <p id="loginSubtitle" class="text-sm text-slate-400 mb-6">
+          Enter your registered business email to access your workspace.
         </p>
 
-        <button
-          type="button"
-          onclick="window.handleGoogleSignIn()"
-          class="w-full mb-4 flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-xl border border-slate-700 transition duration-200 cursor-pointer"
-        >
-          <svg class="w-5 h-5" viewBox="0 0 24 24">
-            <path
-              fill="#EA4335"
-              d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.2 9 5 12 5z"
-            />
-            <path
-              fill="#4285F4"
-              d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.2-6.4-5.2L1.9 17C3.7 20.7 7.5 24 12 24z"
-            />
-          </svg>
-          Continue with Google
-        </button>
-
-        <div class="relative flex py-2 items-center mb-4">
-          <div class="flex-grow border-t border-slate-800"></div>
-          <span
-            class="flex-shrink mx-4 text-xs uppercase text-slate-500 font-semibold"
-            >Or with Email OTP</span
+        <!-- Google button dynamically shown ONLY for initial non-registered view -->
+        <div id="loginGoogleArea" class="hidden">
+          <button
+            type="button"
+            onclick="window.handleGoogleSignIn()"
+            class="w-full mb-4 flex items-center justify-center gap-3 bg-slate-800/80 hover:bg-slate-800 hover:border-cyan-500/40 text-white font-semibold py-2.5 rounded-xl border border-slate-700 transition duration-200 cursor-pointer shadow-md"
           >
-          <div class="flex-grow border-t border-slate-800"></div>
+            <svg class="w-5 h-5" viewBox="0 0 24 24">
+              <path
+                fill="#EA4335"
+                d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.2 9 5 12 5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.2-6.4-5.2L1.9 17C3.7 20.7 7.5 24 12 24z"
+              />
+            </svg>
+            Continue with Google
+          </button>
+          <div class="relative flex py-2 items-center mb-4">
+            <div class="flex-grow border-t border-slate-800"></div>
+            <span
+              class="flex-shrink mx-4 text-xs uppercase text-slate-500 font-semibold"
+              >Or with Email</span
+            >
+            <div class="flex-grow border-t border-slate-800"></div>
+          </div>
         </div>
 
-        <div id="loginStepEmail" class="space-y-4">
+        <!-- 1. Email Login Input Form -->
+        <form
+          id="loginFormEmail"
+          onsubmit="
+            event.preventDefault();
+            window.handleDirectLogin();
+          "
+          class="space-y-4"
+        >
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
-              >Account Email</label
+              >Registered Work Email</label
             >
             <input
               id="loginEmail"
               type="email"
               placeholder="Type Valid Work Email"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-medium transition"
               required
             />
           </div>
-          <button
-            type="button"
-            id="otpSendBtn"
-            onclick="window.requestOtp()"
-            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition cursor-pointer"
-          >
-            Send OTP Code
-          </button>
-        </div>
 
-        <div id="loginStepOtp" class="space-y-4 hidden">
+          <!-- Brand Gradient Login Button -->
+          <button
+            type="submit"
+            id="loginBtn"
+            class="w-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-semibold py-3 rounded-xl transition-all duration-300 shadow-lg shadow-indigo-600/25 hover:shadow-cyan-500/20 cursor-pointer"
+          >
+            Sign In to Workspace
+          </button>
+        </form>
+
+        <!-- 2. OTP Verification Input Form -->
+        <form
+          id="loginFormOtp"
+          onsubmit="
+            event.preventDefault();
+            window.verifyOtp();
+          "
+          class="space-y-4 hidden"
+        >
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
-              >Enter 6-Digit Email OTP</label
+              >Enter Email Verification OTP Code</label
             >
             <input
               id="loginOtp"
               type="text"
-              maxlength="6"
-              placeholder="123456"
-              class="w-full text-center tracking-widest text-xl font-mono bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              maxlength="8"
+              placeholder="Enter 6 to 8-digit OTP"
+              autocomplete="one-time-code"
+              class="w-full text-center tracking-widest text-lg sm:text-xl font-mono bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-cyan-400 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-semibold transition"
               required
             />
           </div>
           <button
-            type="button"
+            type="submit"
             id="otpVerifyBtn"
-            onclick="window.verifyOtp()"
-            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition cursor-pointer"
+            class="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/25 cursor-pointer"
           >
-            Verify & Sign In
+            Verify Code & Enter Workspace
           </button>
-        </div>
+        </form>
 
-        <p class="text-xs text-center text-slate-400 mt-4">
+        <p
+          id="loginSignupPrompt"
+          class="text-xs text-center text-slate-400 mt-4"
+        >
           Need an account?
           <button
             type="button"
             onclick="window.showView('signup')"
-            class="text-indigo-400 hover:underline"
+            class="text-cyan-400 font-medium hover:underline"
           >
             Sign up
           </button>
         </p>
       </div>
 
-      <!-- View 3: App Workspace & Free Auditor (Logged In Area) -->
+      <!-- View 3: App Workspace & Free Auditor (Dashboard) -->
       <div id="viewDashboard" class="w-full space-y-8 hidden max-w-5xl">
-        <div class="text-center max-w-3xl mx-auto">
-          <!-- Upgraded High-Intent SEO Badge -->
+        <div class="text-center max-w-4xl mx-auto">
           <span
-            class="bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-indigo-500/20"
+            class="inline-flex items-center gap-1.5 bg-indigo-500/10 text-cyan-300 text-xs font-bold uppercase tracking-widest px-3.5 py-1 rounded-full border border-cyan-500/30 shadow-sm shadow-cyan-500/10"
           >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+            ></span>
             AI-Powered Tracking & Conversion Inspector
           </span>
 
-          <!-- H1 Tag: 2-Line Fixed Height to avoid Layout Shift and Lock Cursor Inline -->
-          <div class="h-28 sm:h-32 flex items-center justify-center mt-3">
+          <!-- Typewriter Section with 3-Color Gradient & Fixed Height -->
+          <div
+            class="h-[110px] sm:h-[125px] md:h-[135px] flex items-center justify-center mt-3 px-2"
+          >
             <h1
-              class="text-3xl sm:text-5xl font-black text-white leading-tight tracking-tight text-center inline"
+              class="text-2xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight text-center max-w-3xl"
             >
-              <span id="typewriterText"></span
+              <span
+                id="typewriterText"
+                class="text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-cyan-300"
+              ></span
               ><span
-                class="text-indigo-500 font-light cursor-blink inline-block ml-0.5"
+                class="text-cyan-400 font-light cursor-blink inline-block ml-0.5"
                 >|</span
               >
             </h1>
@@ -683,7 +709,7 @@
         </div>
 
         <div
-          class="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 shadow-2xl max-w-3xl mx-auto"
+          class="bg-slate-900/90 p-4 sm:p-6 rounded-2xl border border-slate-800 shadow-2xl max-w-3xl mx-auto backdrop-blur-sm relative"
         >
           <form
             onsubmit="
@@ -695,21 +721,21 @@
             <input
               id="targetUrl"
               type="url"
-              placeholder="Type Website URL"
-              class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+              placeholder="Type Your Website URL"
+              class="flex-1 bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 text-sm transition"
               required
             />
             <button
               id="auditBtn"
               type="submit"
-              class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
+              class="bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/25 cursor-pointer flex items-center justify-center gap-2"
             >
               <span>Run Free Audit</span>
             </button>
           </form>
           <p
             id="statusMsg"
-            class="text-xs text-indigo-400 mt-3 hidden animate-pulse"
+            class="text-xs text-cyan-400 mt-3 hidden animate-pulse"
           >
             Running live network payload inspection across all advertising
             platforms...
@@ -719,7 +745,7 @@
         <!-- Audit Results Container -->
         <div id="results" class="space-y-6 hidden">
           <div
-            class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xl"
+            class="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xl backdrop-blur-sm"
           >
             <div>
               <span class="text-xs uppercase font-semibold text-slate-500"
@@ -737,21 +763,20 @@
                 >
                 <div
                   id="overallScore"
-                  class="text-2xl font-black text-amber-400 bg-amber-500/10 px-3.5 py-1 rounded-xl border border-amber-500/20"
+                  class="text-2xl font-black text-cyan-400 bg-cyan-500/10 px-3.5 py-1 rounded-xl border border-cyan-500/20"
                 >
                   --/100
                 </div>
               </div>
 
-              <!-- Free Export Action Buttons -->
               <div class="flex items-center gap-2">
                 <button
                   type="button"
                   onclick="window.downloadPDFReport()"
-                  class="bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-white text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+                  class="bg-slate-800/80 hover:bg-slate-800 text-cyan-300 hover:text-white text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <svg
-                    class="w-4 h-4 text-indigo-400"
+                    class="w-4 h-4 text-cyan-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -768,7 +793,7 @@
                 <button
                   type="button"
                   onclick="window.downloadCSVReport()"
-                  class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+                  class="bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <svg
                     class="w-4 h-4 text-slate-400"
@@ -791,7 +816,7 @@
 
           <!-- Diagnostic Table -->
           <div
-            class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl"
+            class="bg-slate-900/90 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-sm"
           >
             <div
               class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center"
@@ -827,13 +852,16 @@
             </div>
           </div>
 
-          <!-- High-Converting CTA Banner -->
+          <!-- CTA Banner with Brand Palette -->
           <div
-            class="bg-gradient-to-r from-indigo-950 via-slate-900 to-emerald-950 p-6 sm:p-8 rounded-2xl border border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl"
+            class="bg-gradient-to-r from-indigo-950/80 via-slate-900 to-slate-950 p-6 sm:p-8 rounded-2xl border border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden"
           >
-            <div class="space-y-2 text-center md:text-left">
+            <div
+              class="absolute -right-10 -bottom-10 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"
+            ></div>
+            <div class="space-y-2 text-center md:text-left z-10">
               <span
-                class="bg-emerald-500/20 text-emerald-400 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-emerald-500/30"
+                class="bg-cyan-500/15 text-cyan-300 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-cyan-500/30"
                 >Done-For-You Setup</span
               >
               <h3 class="text-xl sm:text-2xl font-black text-white">
@@ -846,10 +874,10 @@
             </div>
             <button
               type="button"
-              onclick="window.openBookingModal('Full Tracking Audit Fix')"
-              class="w-full md:w-auto whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3.5 rounded-xl transition shadow-xl shadow-emerald-600/30 cursor-pointer"
+              onclick="window.openBookingModal('Fix Tracking Issues')"
+              class="w-full md:w-auto whitespace-nowrap bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-bold px-6 py-3.5 rounded-xl transition-all shadow-xl shadow-cyan-500/20 cursor-pointer z-10"
             >
-              Book Tracking Fix
+              Fix Tracking Issues
             </button>
           </div>
         </div>
@@ -872,14 +900,19 @@
           ✕
         </button>
 
-        <h3 class="text-xl sm:text-2xl font-black text-white tracking-tight">
-          Book Expert Tracking Setup & Fix
+        <h3
+          id="bmModalTitle"
+          class="text-xl sm:text-2xl font-black text-white tracking-tight"
+        >
+          Book Expert Tracking Setup
         </h3>
         <p
-          class="text-xs sm:text-sm text-slate-200 font-medium mt-1.5 leading-relaxed"
+          id="bmModalDesc"
+          class="text-xs sm:text-sm text-cyan-300 font-medium mt-1.5 leading-relaxed"
         >
-          Our tracking engineers will review your audit report and contact you
-          via Email/WhatsApp within a few hours.
+          Scale your business with precision data! Let our experts build a
+          flawless tracking infrastructure so you never miss a single
+          conversion.
         </p>
 
         <form
@@ -889,7 +922,7 @@
           "
           class="space-y-3.5 mt-5 text-left"
         >
-          <input id="bmServiceType" type="hidden" value="Full Tracking Fix" />
+          <input id="bmServiceType" type="hidden" value="Book Tracking Setup" />
 
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
@@ -899,7 +932,7 @@
               id="bmName"
               type="text"
               placeholder="Type Your Name"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
               required
             />
           </div>
@@ -913,7 +946,7 @@
               type="email"
               oninput="window.validateEmailLive('bmEmail', 'bmEmailWarning')"
               placeholder="Type Valid Work Email"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
               required
             />
             <p
@@ -935,14 +968,15 @@
               <select
                 id="bmCountrySelect"
                 onchange="window.onCountryChanged('booking')"
-                class="w-48 bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                class="w-48 bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
+                required
               >
+                <option value="" disabled selected>Select Country</option>
                 <option
                   value="United States"
                   data-code="+1"
                   data-min="10"
                   data-max="10"
-                  selected
                 >
                   +1 (United States)
                 </option>
@@ -1262,8 +1296,8 @@
                 id="bmWhatsApp"
                 type="tel"
                 oninput="window.validatePhoneLive('booking')"
-                placeholder="+1 "
-                class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                placeholder=""
+                class="flex-1 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono"
                 required
               />
             </div>
@@ -1280,101 +1314,147 @@
             <input
               id="bmSiteUrl"
               type="url"
-              placeholder="Type Website URL"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="https://yourwebsite.com"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
               required
             />
           </div>
 
-          <!-- Auto-Detected Platform & Form Types -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-slate-400 mb-1"
-                >Store / CMS Platform</label
+                >Business Goal</label
               >
               <select
-                id="bmPlatform"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                id="bmGoal"
+                onchange="window.onBusinessGoalChanged()"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
+                required
               >
-                <optgroup label="CMS & E-Commerce">
-                  <option value="Shopify">Shopify</option>
-                  <option value="WooCommerce">WooCommerce</option>
-                  <option value="WordPress">WordPress</option>
-                  <option value="Wix">Wix</option>
-                  <option value="Squarespace">Squarespace</option>
-                  <option value="Magento">Magento</option>
-                  <option value="Webflow">Webflow</option>
-                  <option value="PrestaShop">PrestaShop</option>
-                  <option value="BigCommerce">BigCommerce</option>
-                  <option value="GoHighLevel (GHL)">GoHighLevel (GHL)</option>
-                </optgroup>
-                <optgroup label="Custom / Frameworks">
-                  <option value="Next.js">Next.js</option>
-                  <option value="React">React</option>
-                  <option value="Laravel">Laravel</option>
-                  <option value="Python / Django">Python / Django</option>
-                  <option value="PHP / Custom">PHP / Custom</option>
-                  <option value="Custom Coded">Custom Coded</option>
-                  <option value="Other">Other Platform</option>
-                </optgroup>
+                <option value="" disabled selected>Choose Goal</option>
+                <option value="Ecommerce">Ecommerce</option>
+                <option value="Lead Generation">Lead Generation</option>
+                <option value="GHL / Funnel">GHL / Funnel</option>
+                <option value="Booking / Appointment">
+                  Booking / Appointment
+                </option>
+                <option value="Phone Call Tracking">Phone Call Tracking</option>
+                <option value="SaaS / Subscription">SaaS / Subscription</option>
+                <option value="Offline Conversion">Offline Conversion</option>
+                <option value="Other">Other</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1"
-                >Form Technology Detected</label
+              <label
+                id="bmPlatformLabel"
+                class="block text-xs font-semibold text-slate-400 mb-1"
+                >Platform</label
               >
               <select
-                id="bmFormType"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                id="bmPlatform"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
+                required
               >
-                <option value="Standard / Native Form">
-                  Standard / Native Form
-                </option>
-                <option value="Contact Form 7">Contact Form 7 (WP)</option>
-                <option value="HubSpot Form">HubSpot Form</option>
-                <option value="JotForm">JotForm</option>
-                <option value="Typeform">Typeform</option>
-                <option value="WPForms">WPForms</option>
-                <option value="Gravity Forms">Gravity Forms</option>
-                <option value="iFrame Embedded Form">
-                  iFrame Embedded Form
-                </option>
-                <option value="GHL Form / Funnel">GHL Form / Funnel</option>
-                <option value="Custom AJAX Form">Custom AJAX Form</option>
-                <option value="None / Not Found">None / Not Found</option>
+                <option value="" disabled selected>Choose Goal First</option>
               </select>
             </div>
           </div>
 
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1"
+                >Tracking Objective</label
+              >
+              <input
+                id="bmObjective"
+                type="text"
+                placeholder="e.g. Purchase / Lead / Signup"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1"
+                >Marketing / Analytics Platform</label
+              >
+              <input
+                id="bmMarketingPlatform"
+                type="text"
+                placeholder="e.g. GA4 + Google Ads + Meta"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
+                required
+              />
+            </div>
+          </div>
+
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1"
-              >Issue Description (Optional)</label
+            <label
+              id="bmNotesLabel"
+              class="block text-xs font-semibold text-slate-400 mb-1"
+              >Describe Your Tracking Issues</label
             >
             <textarea
               id="bmNotes"
               rows="2"
-              placeholder="Tell us if you have specific goals or urgency..."
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Mention what is not working (e.g. Purchases not tracking in GA4...)"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
             ></textarea>
           </div>
 
           <button
             id="bmSubmitBtn"
             type="submit"
-            class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 cursor-pointer text-sm"
+            class="w-full bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-bold py-3 rounded-xl transition-all shadow-lg shadow-cyan-500/20 cursor-pointer text-sm"
           >
-            Submit Booking Request
+            <span id="bmSubmitBtnText">Submit Booking Request</span>
           </button>
         </form>
       </div>
     </div>
 
-    <!-- Highly Readable Footer Text -->
-    <footer
-      class="border-t border-slate-800/80 py-5 text-center text-xs sm:text-sm text-slate-300 font-medium"
+    <!-- Professional Custom Notification Modal -->
+    <div
+      id="customNotifyModal"
+      class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 hidden"
     >
-      © 2026 AuditMyTracking. All rights reserved.
+      <div
+        id="notifyCard"
+        class="bg-slate-900 border w-full max-w-md rounded-2xl p-6 shadow-2xl text-center transform transition-all"
+      >
+        <div
+          id="notifyIconContainer"
+          class="w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4 border"
+        >
+          <span id="notifyIcon"></span>
+        </div>
+
+        <h3 id="notifyTitle" class="text-lg font-black text-white mb-2"></h3>
+        <p
+          id="notifyMessage"
+          class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6"
+        ></p>
+
+        <button
+          id="notifyBtn"
+          type="button"
+          onclick="window.closeNotificationModal()"
+          class="w-full py-2.5 rounded-xl font-semibold text-sm transition shadow-lg cursor-pointer"
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+
+    <footer
+      class="border-t border-slate-800/80 py-5 text-center text-xs sm:text-sm text-slate-400 font-medium"
+    >
+      © 2026
+      <span class="text-slate-200 font-semibold"
+        >Audit<span class="text-indigo-400">My</span
+        ><span class="text-cyan-400">Tracking</span></span
+      >. All rights reserved.
     </footer>
 
     <script src="app.js"></script>

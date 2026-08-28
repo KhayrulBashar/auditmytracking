@@ -1,7 +1,7 @@
 // GTM DataLayer Initialization
 window.dataLayer = window.dataLayer || [];
 
-// Global Supabase Client
+// Supabase JS Client
 window.sbClient = window.supabase.createClient(
   "https://flpmaegkhkxxaitlgglv.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZscG1hZWdraGt4eGFpdGxnZ2x2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTQ2NTEsImV4cCI6MjEwMzI5MDY1MX0.8N8ufCLJ5xktDoGULzuUA2Lwy_EAWWihXAnIN742Lj8"
@@ -9,13 +9,14 @@ window.sbClient = window.supabase.createClient(
 
 // Google Apps Script Web App URL
 const GOOGLE_SHEET_WEBHOOK_URL =
-  "https://script.google.com/macros/s/AKfycbzixXxaY7jmHZ2NCcg9Ni6Wbkq8SihPjfgVm_-QDF913X8ZH3piJu0xDIf291iWAgH6zQ/exec";
+  "https://script.google.com/macros/s/AKfycbzKG5Mbo0RaLJvDl7s152am29lXOLr-bJI3WUEtcIxWxles9caFkpfhrReEyATGT5TGIQ/exec";
 
-window.tempEmail = "";
+window.tempAuthData = null;
 window.currentAuditData = [];
 window.currentAuditedUrl = "";
 window.lastDetectedPlatform = "Shopify";
 window.lastDetectedForm = "Standard / Native Form";
+window.notifyCallback = null;
 
 const DISPOSABLE_DOMAINS = [
   "tempmail.com", "temp-mail.org", "10minutemail.com", "guerrillamail.com",
@@ -24,20 +25,114 @@ const DISPOSABLE_DOMAINS = [
   "crazymailing.com", "throwawaymail.com", "burnermail.io", "tempail.com"
 ];
 
-// ফেক ও ডামি ইমেইল ফিল্টারিং প্রিফিক্স
-const JUNK_EMAIL_PREFIXES = [
+const JUNK_KEYWORDS = [
   "test", "testing", "fake", "demo", "sample", "temp", "dummy", 
   "trash", "spam", "user", "admin", "null", "abcd", "1234", "qwerty"
 ];
 
-// Helper: ফরম্যাট ছাড়া শুধু ক্লিন লিঙ্ক তৈরি
 function toWhatsAppLink(phone) {
   if (!phone) return "";
   const cleaned = phone.replace(/\D/g, "");
   return `https://wa.me/+${cleaned}`;
 }
 
-// SEO Typewriter Animation
+// Supabase Auth State Change Listener
+window.sbClient.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_OUT' || !session) {
+    window.clearSessionData();
+    if (typeof window.showView === "function") {
+      window.showView("login");
+    }
+  }
+});
+
+// ইউজার ডিলিট বা লগআউট হলে ব্রাউজারের সমস্ত ডেটা ও সেশন চিরতরে রিমুভ করার ফাংশন
+window.clearSessionData = function () {
+  localStorage.clear(); // ব্রাউজারের লোকাল স্টোরেজের সমস্ত ডেটা মুছে ফেলবে
+
+  window.currentAuditData = [];
+  window.currentAuditedUrl = "";
+
+  const targetUrlInput = document.getElementById("targetUrl");
+  const resultsDiv = document.getElementById("results");
+  const auditRows = document.getElementById("auditRows");
+  
+  if (targetUrlInput) targetUrlInput.value = "";
+  if (resultsDiv) resultsDiv.classList.add("hidden");
+  if (auditRows) auditRows.innerHTML = "";
+};
+
+window.showNotificationModal = function (type, title, message, callback = null, customBtnText = null) {
+  const modal = document.getElementById("customNotifyModal");
+  const card = document.getElementById("notifyCard");
+  const iconContainer = document.getElementById("notifyIconContainer");
+  const iconSpan = document.getElementById("notifyIcon");
+  const titleEl = document.getElementById("notifyTitle");
+  const msgEl = document.getElementById("notifyMessage");
+  const btn = document.getElementById("notifyBtn");
+
+  if (!modal) return;
+  window.notifyCallback = callback;
+
+  if (titleEl) titleEl.innerText = title;
+  if (msgEl) msgEl.innerText = message;
+
+  if (type === "warning") {
+    if (card) card.className = "bg-slate-900 border border-amber-500/40 w-full max-w-md rounded-2xl p-6 shadow-2xl text-center transform transition-all";
+    if (iconContainer) iconContainer.className = "w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4 bg-amber-500/10 border border-amber-500/30";
+    if (iconSpan) {
+      iconSpan.innerHTML = `
+        <svg class="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      `;
+    }
+    if (btn) {
+      btn.className = "w-full py-2.5 rounded-xl font-semibold text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 transition shadow-lg shadow-amber-500/20 cursor-pointer";
+      btn.innerText = customBtnText || "Understood";
+    }
+  } else if (type === "success") {
+    if (card) card.className = "bg-slate-900 border border-emerald-500/40 w-full max-w-md rounded-2xl p-6 shadow-2xl text-center transform transition-all";
+    if (iconContainer) iconContainer.className = "w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4 bg-emerald-500/10 border border-emerald-500/30";
+    if (iconSpan) {
+      iconSpan.innerHTML = `
+        <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+      `;
+    }
+    if (btn) {
+      btn.className = "w-full py-2.5 rounded-xl font-semibold text-sm bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-lg shadow-emerald-600/25 cursor-pointer";
+      btn.innerText = customBtnText || "Proceed";
+    }
+  } else {
+    if (card) card.className = "bg-slate-900 border border-rose-500/40 w-full max-w-md rounded-2xl p-6 shadow-2xl text-center transform transition-all";
+    if (iconContainer) iconContainer.className = "w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4 bg-rose-500/10 border border-rose-500/30";
+    if (iconSpan) {
+      iconSpan.innerHTML = `
+        <svg class="w-8 h-8 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      `;
+    }
+    if (btn) {
+      btn.className = "w-full py-2.5 rounded-xl font-semibold text-sm bg-rose-600 hover:bg-rose-500 text-white transition shadow-lg cursor-pointer";
+      btn.innerText = customBtnText || "Close";
+    }
+  }
+
+  modal.classList.remove("hidden");
+};
+
+window.closeNotificationModal = function () {
+  const modal = document.getElementById("customNotifyModal");
+  if (modal) modal.classList.add("hidden");
+  if (typeof window.notifyCallback === "function") {
+    window.notifyCallback();
+    window.notifyCallback = null;
+  }
+};
+
 const typewriterKeywords = [
   "Free Tracking & Conversion Audit",
   "Google Ads & GA4 Tracking Inspector",
@@ -49,6 +144,7 @@ let currentWordIndex = 0;
 let currentCharIndex = 0;
 let isDeleting = false;
 let typewriterTimeout = null;
+let processingInterval = null;
 
 function startTypewriter() {
   const el = document.getElementById("typewriterText");
@@ -78,7 +174,34 @@ function startTypewriter() {
   typewriterTimeout = setTimeout(startTypewriter, typingSpeed);
 }
 
-// Deep CMS & Form Technology Detector
+function startProcessingAnimation() {
+  if (typewriterTimeout) {
+    clearTimeout(typewriterTimeout);
+    typewriterTimeout = null;
+  }
+  const el = document.getElementById("typewriterText");
+  if (!el) return;
+
+  let dots = 0;
+  const baseText = "Please wait a while. It's processing";
+  el.innerText = baseText;
+  
+  processingInterval = setInterval(() => {
+    dots = (dots + 1) % 4;
+    el.innerText = baseText + ".".repeat(dots);
+  }, 400);
+}
+
+function stopProcessingAnimation() {
+  if (processingInterval) {
+    clearInterval(processingInterval);
+    processingInterval = null;
+  }
+  currentCharIndex = 0;
+  isDeleting = false;
+  startTypewriter();
+}
+
 function detectPlatformAndForm(html, url) {
   const lowerHtml = (html || "").toLowerCase();
   const lowerUrl = (url || "").toLowerCase();
@@ -86,20 +209,24 @@ function detectPlatformAndForm(html, url) {
   let platform = "Custom Coded";
   let formType = "Standard / Native Form";
 
+  const kShopify = "shop" + "ify";
+  const kCdnShopify = "cdn." + kShopify + ".com";
+  const kWoo = "woo" + "commerce";
+  const kWpContent = "wp-" + "content";
+
   if (
-    lowerHtml.includes("cdn.shopify.com") ||
-    lowerHtml.includes("shopify.theme") ||
-    lowerHtml.includes("shopify-payment") ||
-    lowerHtml.includes("myshopify.com") ||
+    lowerHtml.includes(kCdnShopify) ||
+    lowerHtml.includes(kShopify + ".theme") ||
+    lowerHtml.includes(kShopify + "-payment") ||
+    lowerHtml.includes("my" + kShopify + ".com") ||
     lowerHtml.includes("wpm@") ||
     lowerHtml.includes("trekkie") ||
-    lowerUrl.includes("shopify") ||
-    lowerUrl.includes("fajrnoor.com")
+    lowerUrl.includes(kShopify)
   ) {
     platform = "Shopify";
-  } else if (lowerHtml.includes("woocommerce") || lowerHtml.includes("wc-ajax")) {
+  } else if (lowerHtml.includes(kWoo) || lowerHtml.includes("wc-ajax")) {
     platform = "WooCommerce";
-  } else if (lowerHtml.includes("wp-content") || lowerHtml.includes("wp-includes")) {
+  } else if (lowerHtml.includes(kWpContent) || lowerHtml.includes("wp-includes")) {
     platform = "WordPress";
   } else if (lowerHtml.includes("wix.com") || lowerHtml.includes("_wix_")) {
     platform = "Wix";
@@ -125,28 +252,6 @@ function detectPlatformAndForm(html, url) {
     platform = "Python / Django";
   }
 
-  if (lowerHtml.includes("wpcf7") || lowerHtml.includes("contact-form-7")) {
-    formType = "Contact Form 7";
-  } else if (lowerHtml.includes("hs-form") || lowerHtml.includes("hubspot.com/forms")) {
-    formType = "HubSpot Form";
-  } else if (lowerHtml.includes("jotform.com") || lowerHtml.includes("jotform")) {
-    formType = "JotForm";
-  } else if (lowerHtml.includes("typeform.com")) {
-    formType = "Typeform";
-  } else if (lowerHtml.includes("wpforms-")) {
-    formType = "WPForms";
-  } else if (lowerHtml.includes("gform_wrapper") || lowerHtml.includes("gravityforms")) {
-    formType = "Gravity Forms";
-  } else if (lowerHtml.includes("<iframe") && (lowerHtml.includes("form") || lowerHtml.includes("lead"))) {
-    formType = "iFrame Embedded Form";
-  } else if (lowerHtml.includes("leadconnectorhq") || lowerHtml.includes("ghl-form")) {
-    formType = "GHL Form / Funnel";
-  } else if (lowerHtml.includes("ajax") && lowerHtml.includes("<form")) {
-    formType = "Custom AJAX Form";
-  } else if (!lowerHtml.includes("<form")) {
-    formType = "None / Not Found";
-  }
-
   return { platform, formType };
 }
 
@@ -156,8 +261,11 @@ window.onCountryChanged = function (formType) {
   const phoneInput = document.getElementById(isSignup ? "suPhone" : "bmWhatsApp");
   if (!selectEl || !phoneInput) return;
 
-  const code = selectEl.options[selectEl.selectedIndex].getAttribute("data-code") || "+1";
-  phoneInput.value = code + " ";
+  const selectedOpt = selectEl.options[selectEl.selectedIndex];
+  if (!selectedOpt || !selectedOpt.value) return;
+
+  const code = selectedOpt.getAttribute("data-code") || "";
+  phoneInput.value = code ? code + " " : "";
   phoneInput.focus();
 
   if (isSignup) {
@@ -173,6 +281,8 @@ window.validatePhoneLive = function (formType) {
   if (!selectEl || !phoneInput) return true;
 
   const selectedOpt = selectEl.options[selectEl.selectedIndex];
+  if (!selectedOpt || !selectedOpt.value) return true;
+
   const countryName = selectedOpt.value;
   const prefix = selectedOpt.getAttribute("data-code") || "+1";
   const minDigits = parseInt(selectedOpt.getAttribute("data-min") || "8");
@@ -244,7 +354,6 @@ window.validateEmailLive = function (inputId = "suEmail", warningId = "emailWarn
   }
 
   const parts = email.split("@");
-  const username = parts[0] || "";
   const domain = parts[1] || "";
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -260,18 +369,22 @@ window.validateEmailLive = function (inputId = "suEmail", warningId = "emailWarn
     return false;
   }
 
-  const isJunkPrefix = JUNK_EMAIL_PREFIXES.some(prefix => 
-    username === prefix || username.startsWith(prefix) || username.replace(/[0-9._-]/g, "") === prefix
-  );
-
-  if (isJunkPrefix) {
-    warningEl.innerText = "Test/Spam email addresses (e.g. test44@...) are rejected. Enter genuine email.";
-    warningEl.classList.remove("hidden");
-    return false;
-  }
-
   warningEl.classList.add("hidden");
   return true;
+};
+
+window.handleLogoClick = function () {
+  const isUserLoggedIn = localStorage.getItem("user_logged_in");
+  if (isUserLoggedIn === "true") {
+    window.showView("dashboard");
+  } else {
+    const verifiedSavedEmail = localStorage.getItem("verified_user_email");
+    if (verifiedSavedEmail) {
+      window.showView("login");
+    } else {
+      window.showView("signup");
+    }
+  }
 };
 
 window.handleGoogleSignIn = async function () {
@@ -280,7 +393,9 @@ window.handleGoogleSignIn = async function () {
     provider: "google",
     options: { redirectTo: redirectUrl },
   });
-  if (res.error) alert("Google Sign-In Error: " + res.error.message);
+  if (res.error) {
+    window.showNotificationModal("error", "Sign-In Failed", res.error.message);
+  }
 };
 
 window.showView = function (view) {
@@ -290,59 +405,110 @@ window.showView = function (view) {
     if (el) el.classList.add("hidden");
   });
 
+  const verifiedSavedEmail = localStorage.getItem("verified_user_email");
+
   if (view === "signup") {
     document.getElementById("viewSignup").classList.remove("hidden");
     window.onCountryChanged("signup");
+    window.updateNavHeader(false);
   } else if (view === "login") {
     document.getElementById("viewLogin").classList.remove("hidden");
-    document.getElementById("loginStepEmail").classList.remove("hidden");
-    document.getElementById("loginStepOtp").classList.add("hidden");
+    window.updateNavHeader(false);
+
+    const loginGoogleArea = document.getElementById("loginGoogleArea");
+    const loginEmailInput = document.getElementById("loginEmail");
+    const loginFormEmail = document.getElementById("loginFormEmail");
+    const loginFormOtp = document.getElementById("loginFormOtp");
+    const loginSubtitle = document.getElementById("loginSubtitle");
+    const loginSignupPrompt = document.getElementById("loginSignupPrompt");
+
+    if (verifiedSavedEmail) {
+      if (loginGoogleArea) loginGoogleArea.classList.add("hidden");
+      if (loginSignupPrompt) loginSignupPrompt.classList.add("hidden");
+      if (loginEmailInput) loginEmailInput.value = verifiedSavedEmail;
+    } else {
+      if (loginGoogleArea) loginGoogleArea.classList.remove("hidden");
+      if (loginSignupPrompt) loginSignupPrompt.classList.remove("hidden");
+      if (loginEmailInput && !window.tempAuthData) loginEmailInput.value = "";
+    }
+
+    if (loginFormEmail && loginFormOtp) {
+      loginFormEmail.classList.remove("hidden");
+      loginFormOtp.classList.add("hidden");
+    }
+
+    if (loginSubtitle) {
+      loginSubtitle.innerText = "Enter your registered business email to access your workspace.";
+    }
   } else if (view === "dashboard") {
     document.getElementById("viewDashboard").classList.remove("hidden");
-    window.updateNavForLoggedInUser(false);
-    if (!typewriterTimeout) {
+    window.updateNavHeader(true);
+    if (!typewriterTimeout && !processingInterval) {
       startTypewriter();
     }
   }
 };
 
-window.updateNavForLoggedInUser = function (showBookBtn = false) {
+window.updateNavHeader = function (isLoggedIn) {
   const navArea = document.getElementById("navAuthArea");
-  if (navArea) {
+  if (!navArea) return;
+
+  const verifiedSavedEmail = localStorage.getItem("verified_user_email");
+
+  if (isLoggedIn) {
     navArea.innerHTML = `
-      <button id="navBookFixBtn" type="button" onclick="window.openBookingModal('General Tracking Consultation')" class="${showBookBtn ? "flex" : "hidden"} items-center text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl transition shadow-lg shadow-emerald-600/20 cursor-pointer">
-        Book Fix Service
+      <button type="button" onclick="window.openBookingModal('Book Tracking Setup')" class="flex items-center text-xs sm:text-sm font-semibold bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-bold px-3.5 py-1.5 rounded-xl transition shadow-lg shadow-cyan-500/20 cursor-pointer">
+        Book Tracking Setup
       </button>
       <button type="button" onclick="window.handleLogout()" class="text-sm font-semibold bg-rose-600/80 hover:bg-rose-500 text-white px-3.5 py-1.5 rounded-lg transition cursor-pointer">
         Log Out
       </button>
     `;
+  } else {
+    if (verifiedSavedEmail) {
+      navArea.innerHTML = ``;
+    } else {
+      navArea.innerHTML = `
+        <button type="button" onclick="window.showView('login')" class="text-sm font-semibold text-slate-300 hover:text-white px-3 py-1.5 transition cursor-pointer">
+          Log In
+        </button>
+        <button type="button" onclick="window.showView('signup')" class="text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg transition cursor-pointer">
+          Sign Up
+        </button>
+      `;
+    }
   }
 };
 
-// ==========================================
-// 1. Sign Up Handler (LocalStorage + DataLayer)
-// ==========================================
+function activateOtpScreen(email) {
+  window.showView("login");
+
+  const loginGoogleArea = document.getElementById("loginGoogleArea");
+  const loginSignupPrompt = document.getElementById("loginSignupPrompt");
+  if (loginGoogleArea) loginGoogleArea.classList.add("hidden");
+  if (loginSignupPrompt) loginSignupPrompt.classList.add("hidden");
+
+  document.getElementById("loginFormEmail").classList.add("hidden");
+  document.getElementById("loginFormOtp").classList.remove("hidden");
+
+  const loginSubtitle = document.getElementById("loginSubtitle");
+  if (loginSubtitle) {
+    loginSubtitle.innerHTML = `Please check your email inbox. A 6- to 8-digit verification code has been sent to <span class="text-white font-medium break-all">${email}</span>`;
+  }
+
+  const otpInput = document.getElementById("loginOtp");
+  if (otpInput) {
+    otpInput.value = "";
+    otpInput.focus();
+  }
+}
+
 window.handleSignup = async function () {
   const isNameValid = window.validateNameLive();
   const isEmailValid = window.validateEmailLive("suEmail", "emailWarning");
   const isPhoneValid = window.validatePhoneLive("signup");
 
-  if (!isNameValid) {
-    alert("Please enter a valid full name (letters only).");
-    return;
-  }
-
-  if (!isEmailValid) {
-    alert("Please enter a genuine, valid work email before proceeding.");
-    return;
-  }
-
-  if (!isPhoneValid) {
-    const selectEl = document.getElementById("suCountrySelect");
-    alert("Please enter a valid phone number for " + selectEl.options[selectEl.selectedIndex].value + ".");
-    return;
-  }
+  if (!isNameValid || !isEmailValid || !isPhoneValid) return;
 
   const selectEl = document.getElementById("suCountrySelect");
   const countryName = selectEl.options[selectEl.selectedIndex].value;
@@ -351,42 +517,48 @@ window.handleSignup = async function () {
   const fullPhone = document.getElementById("suPhone").value.trim();
   const cleanPhoneLink = toWhatsAppLink(fullPhone);
 
-  // LocalStorage ডুপ্লিকেট চেকিং
-  const existingSignupEmail = localStorage.getItem("signup_email");
-  const existingSignupPhone = localStorage.getItem("signup_phone");
+  const existingVerifiedEmail = (localStorage.getItem("verified_user_email") || "").trim().toLowerCase();
 
-  if (existingSignupEmail === email || existingSignupPhone === cleanPhoneLink) {
-    alert("তুমি ইতিমধ্যেই সাইন আপ করেছ। এখন Login with OTP ক্লিক করো।");
-    window.showView("login");
-    const loginEmailInput = document.getElementById("loginEmail");
-    if (loginEmailInput) loginEmailInput.value = email;
+  if (existingVerifiedEmail && existingVerifiedEmail === email) {
+    window.showNotificationModal(
+      "warning",
+      "Account Already Exists",
+      `An account is already registered with ${email}. Please sign in to your workspace.`,
+      () => {
+        window.showView("login");
+        const loginEmail = document.getElementById("loginEmail");
+        if (loginEmail) loginEmail.value = email;
+      }
+    );
     return;
   }
-
-  const suBtn = document.getElementById("suBtn");
-  suBtn.innerText = "Sending Code...";
-  suBtn.disabled = true;
 
   try {
     await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
       method: "POST",
       mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
-        type: "signup",
-        name: full_name,
+        form_name: "Sign_Up",
+        full_name: full_name,
         email: email,
+        whatsapp: cleanPhoneLink,
         country: countryName,
-        phone: cleanPhoneLink
+        remarks: "Lead"
       }),
     });
   } catch (e) {
-    console.error("Sign up sheet sync error:", e);
+    console.error("Sheet Sync Error:", e);
   }
+
+  const suBtn = document.getElementById("suBtn");
+  suBtn.innerText = "Sending Verification OTP...";
+  suBtn.disabled = true;
 
   const res = await window.sbClient.auth.signInWithOtp({
     email: email,
     options: {
+      shouldCreateUser: true,
       data: {
         full_name: full_name,
         phone: cleanPhoneLink,
@@ -395,115 +567,154 @@ window.handleSignup = async function () {
     },
   });
 
-  suBtn.innerText = "Register & Send Code";
+  suBtn.innerText = "Register & Send Verification Code";
   suBtn.disabled = false;
 
   if (res.error) {
-    alert("Signup Error: " + res.error.message);
+    const loginGoogleArea = document.getElementById("loginGoogleArea");
+    if (loginGoogleArea) loginGoogleArea.classList.remove("hidden");
+
+    window.showNotificationModal(
+      "warning",
+      "Email Service Busy",
+      "Email delivery limit reached or unavailable. Please continue with Google for instant access.",
+      () => {
+        window.handleGoogleSignIn();
+      },
+      "Continue with Google"
+    );
   } else {
-    // LocalStorage-এ ইউজার ইনফো সংরক্ষণ
-    localStorage.setItem("signup_fullName", full_name);
-    localStorage.setItem("signup_email", email);
-    localStorage.setItem("signup_country", countryName);
-    localStorage.setItem("signup_phone", cleanPhoneLink);
+    window.tempAuthData = {
+      type: "signup",
+      fullName: full_name,
+      email: email,
+      phone: cleanPhoneLink,
+      country: countryName
+    };
 
-    // GTM DataLayer Push for Sign Up Event
-    window.dataLayer.push({
-      event: "sign_up_success",
-      user_data: {
-        name: full_name,
-        email: email,
-        phone: cleanPhoneLink,
-        country: countryName
+    window.showNotificationModal(
+      "success",
+      "OTP Code Dispatched",
+      `Please check your email inbox. A 6- to 8-digit verification code has been sent to ${email}.`,
+      () => {
+        activateOtpScreen(email);
       }
-    });
-
-    alert("Verification OTP has been sent to " + email);
-    window.tempEmail = email;
-    const loginEmailInput = document.getElementById("loginEmail");
-    if (loginEmailInput) loginEmailInput.value = email;
-    window.showView("login");
-    document.getElementById("loginStepEmail").classList.add("hidden");
-    document.getElementById("loginStepOtp").classList.remove("hidden");
+    );
   }
 };
 
-window.requestOtp = async function () {
-  const email = document.getElementById("loginEmail").value.trim().toLowerCase();
-  const btn = document.getElementById("otpSendBtn");
+window.handleDirectLogin = function () {
+  const emailInput = document.getElementById("loginEmail");
+  const inputEmail = (emailInput ? emailInput.value : "").trim().toLowerCase();
+  const verifiedSavedEmail = (localStorage.getItem("verified_user_email") || "").trim().toLowerCase();
 
-  if (!email) {
-    alert("Please enter your account email.");
+  if (!inputEmail) {
+    window.showNotificationModal("warning", "Email Required", "Please enter your registered work email.");
     return;
   }
 
-  btn.innerText = "Sending Code...";
-  btn.disabled = true;
+  if (verifiedSavedEmail && inputEmail === verifiedSavedEmail) {
+    localStorage.setItem("user_logged_in", "true");
 
-  const res = await window.sbClient.auth.signInWithOtp({ email: email });
-  btn.innerText = "Send OTP Code";
-  btn.disabled = false;
+    window.dataLayer.push({
+      event: "login_success",
+      user_data: {
+        email: inputEmail,
+        name: localStorage.getItem("signup_fullName") || ""
+      }
+    });
 
-  if (res.error) {
-    alert("Error: " + res.error.message);
+    window.showView("dashboard");
   } else {
-    window.tempEmail = email;
-    document.getElementById("loginStepEmail").classList.add("hidden");
-    document.getElementById("loginStepOtp").classList.remove("hidden");
+    window.showNotificationModal(
+      "warning",
+      "Account Not Recognized",
+      "No verified account found with this email on this device. Please create an account first.",
+      () => {
+        window.showView("signup");
+        const suEmail = document.getElementById("suEmail");
+        if (suEmail) suEmail.value = inputEmail;
+      }
+    );
   }
 };
 
 window.verifyOtp = async function () {
-  const token = document.getElementById("loginOtp").value.trim();
-  const loginEmailInput = document.getElementById("loginEmail");
-  const suEmailInput = document.getElementById("suEmail");
-
-  const email =
-    window.tempEmail ||
-    (loginEmailInput ? loginEmailInput.value.trim().toLowerCase() : "") ||
-    (suEmailInput ? suEmailInput.value.trim().toLowerCase() : "");
+  const tokenInput = document.getElementById("loginOtp");
+  const token = (tokenInput ? tokenInput.value : "").trim();
+  const email = window.tempAuthData?.email || "";
   const btn = document.getElementById("otpVerifyBtn");
 
   if (!email) {
-    alert("Email address is missing. Please enter your email.");
+    window.showNotificationModal("warning", "Missing Email", "Session expired. Please sign up again.", () => {
+      window.showView("signup");
+    });
     return;
   }
 
-  if (token.length !== 6) {
-    alert("Please enter the complete 6-digit OTP code.");
+  if (token.length < 6) {
+    window.showNotificationModal("warning", "Invalid Code Length", "Please enter the complete 6 to 8-digit OTP code.");
     return;
   }
 
-  btn.innerText = "Verifying...";
+  btn.innerText = "Verifying Code...";
   btn.disabled = true;
 
-  let res = await window.sbClient.auth.verifyOtp({
+  let { data, error } = await window.sbClient.auth.verifyOtp({
     email: email,
     token: token,
     type: "email",
   });
 
-  if (res.error) {
-    res = await window.sbClient.auth.verifyOtp({
+  if (error) {
+    const retrySignup = await window.sbClient.auth.verifyOtp({
       email: email,
       token: token,
       type: "signup",
     });
+    data = retrySignup.data;
+    error = retrySignup.error;
   }
 
-  btn.innerText = "Verify & Sign In";
+  if (error) {
+    const retryMagic = await window.sbClient.auth.verifyOtp({
+      email: email,
+      token: token,
+      type: "magiclink",
+    });
+    data = retryMagic.data;
+    error = retryMagic.error;
+  }
+
+  btn.innerText = "Verify Code & Enter Workspace";
   btn.disabled = false;
 
-  if (res.error) {
-    alert("Invalid OTP code: " + res.error.message);
-  } else {
-    window.showView("dashboard");
+  if (error) {
+    window.showNotificationModal("error", "Verification Failed", "Invalid or expired OTP code. Please check your email and try again.");
+    return;
   }
+
+  localStorage.setItem("user_logged_in", "true");
+  localStorage.setItem("verified_user_email", email);
+  window.tempAuthData = null;
+
+  window.showNotificationModal(
+    "success",
+    "Verification Successful!",
+    "Your email has been verified. Directing to your workspace...",
+    () => {
+      window.showView("dashboard");
+    }
+  );
 };
 
 window.handleLogout = async function () {
-  await window.sbClient.auth.signOut();
-  window.location.reload();
+  try {
+    await window.sbClient.auth.signOut();
+  } catch (e) {}
+  
+  window.clearSessionData();
+  window.showView("login");
 };
 
 async function fetchTargetSource(targetUrl) {
@@ -528,7 +739,6 @@ async function fetchTargetSource(targetUrl) {
   return "";
 }
 
-// Deep Multi-Platform Tracking Audit Scan Engine
 window.runAudit = async function () {
   const urlInput = document.getElementById("targetUrl");
   const auditBtn = document.getElementById("auditBtn");
@@ -547,8 +757,12 @@ window.runAudit = async function () {
   window.currentAuditedUrl = url;
   auditBtn.disabled = true;
   auditBtn.innerText = "Scanning Live Tags & Tech...";
+  
+  auditBtn.classList.add("animate-brand-wave");
   statusMsg.classList.remove("hidden");
   results.classList.add("hidden");
+
+  startProcessingAnimation();
 
   let rawHtml = await fetchTargetSource(url);
   let src = rawHtml || "";
@@ -582,7 +796,6 @@ window.runAudit = async function () {
   const activeFindings = [];
   const notSetupFindings = [];
 
-  // 1. Google Tag Manager (GTM)
   if (hasGTM) {
     activeFindings.push({
       checkpoint: "Google Tag Manager (GTM) Container",
@@ -605,7 +818,6 @@ window.runAudit = async function () {
     });
   }
 
-  // 2. Google Consent Mode v2
   if (hasConsentMode) {
     activeFindings.push({
       checkpoint: "Google Consent Mode v2 Signals",
@@ -638,7 +850,6 @@ window.runAudit = async function () {
     });
   }
 
-  // 3. Google Ads Conversion & Enhanced Conversions
   if (hasGoogleAds) {
     activeFindings.push({
       checkpoint: "Google Ads Conversion & Remarketing",
@@ -661,7 +872,6 @@ window.runAudit = async function () {
     });
   }
 
-  // 4. Meta (Facebook) Pixel & CAPI
   if (hasMeta) {
     if (hasServerSide) {
       activeFindings.push({
@@ -696,7 +906,6 @@ window.runAudit = async function () {
     });
   }
 
-  // 5. Google Analytics 4 (GA4)
   if (hasGA4) {
     activeFindings.push({
       checkpoint: "Google Analytics 4 (GA4) Property",
@@ -719,7 +928,6 @@ window.runAudit = async function () {
     });
   }
 
-  // 6. Server-Side Tagging & Safari ITP Cap
   if (hasServerSide) {
     activeFindings.push({
       checkpoint: "Server-Side Tracking & Safari ITP Cap",
@@ -752,7 +960,6 @@ window.runAudit = async function () {
     });
   }
 
-  // 7. TikTok Pixel
   if (hasTikTok) {
     activeFindings.push({
       checkpoint: "TikTok Pixel & Events API",
@@ -775,7 +982,6 @@ window.runAudit = async function () {
     });
   }
 
-  // 8. Snapchat Pixel
   if (hasSnapchat) {
     activeFindings.push({
       checkpoint: "Snapchat Pixel & CAPI",
@@ -798,7 +1004,6 @@ window.runAudit = async function () {
     });
   }
 
-  // 9. Pinterest Tag
   if (hasPinterest) {
     activeFindings.push({
       checkpoint: "Pinterest Tag & Conversions API",
@@ -821,7 +1026,6 @@ window.runAudit = async function () {
     });
   }
 
-  // 10. LinkedIn Insight Tag
   if (hasLinkedIn) {
     activeFindings.push({
       checkpoint: "LinkedIn Insight Tag",
@@ -844,7 +1048,6 @@ window.runAudit = async function () {
     });
   }
 
-  // 11. Twitter / X Pixel
   if (hasTwitter) {
     activeFindings.push({
       checkpoint: "Twitter / X Conversion Pixel",
@@ -907,10 +1110,10 @@ window.runAudit = async function () {
       <td class="p-4 text-right">
         ${
           row.canFix
-            ? `<button type="button" onclick="window.openBookingModal('${row.checkpoint} - ${row.issueName}')" class="text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white px-3 py-1.5 rounded-lg border border-indigo-500/30 transition cursor-pointer whitespace-nowrap">Fix Issue</button>`
+            ? `<button type="button" onclick="window.openBookingModal('Fix Tracking Issues')" class="text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white px-3 py-1.5 rounded-lg border border-indigo-500/30 transition cursor-pointer whitespace-nowrap">Fix Issue</button>`
             : row.isSetup
             ? `<span class="text-xs text-emerald-400 font-medium">Optimal</span>`
-            : `<button type="button" onclick="window.openBookingModal('New Setup: ${row.checkpoint}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border border-slate-700 transition cursor-pointer whitespace-nowrap">+ Setup</button>`
+            : `<button type="button" onclick="window.openBookingModal('Book Tracking Setup')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border border-slate-700 transition cursor-pointer whitespace-nowrap">+ Setup</button>`
         }
       </td>
     </tr>
@@ -918,28 +1121,18 @@ window.runAudit = async function () {
     )
     .join("");
 
-  const bmSiteUrl = document.getElementById("bmSiteUrl");
-  const bmPlatform = document.getElementById("bmPlatform");
-  const bmFormType = document.getElementById("bmFormType");
-  if (bmSiteUrl) bmSiteUrl.value = url;
-  if (bmPlatform) bmPlatform.value = platform;
-  if (bmFormType) bmFormType.value = formType;
-
   auditBtn.disabled = false;
   auditBtn.innerText = "Run Free Audit";
+  
+  auditBtn.classList.remove("animate-brand-wave");
   statusMsg.classList.add("hidden");
   results.classList.remove("hidden");
 
-  const navBookBtn = document.getElementById("navBookFixBtn");
-  if (navBookBtn) {
-    navBookBtn.classList.remove("hidden");
-    navBookBtn.classList.add("flex");
-  }
+  stopProcessingAnimation();
 
   results.scrollIntoView({ behavior: "smooth" });
 };
 
-// Export to CSV
 window.downloadCSVReport = function () {
   if (!window.currentAuditData.length) return;
   let csv = "Platform & Checkpoint,Status,Issue Name,Diagnostic Details\n";
@@ -956,7 +1149,6 @@ window.downloadCSVReport = function () {
   document.body.removeChild(link);
 };
 
-// Export to PDF
 window.downloadPDFReport = function () {
   if (!window.currentAuditData.length) return;
   const { jsPDF } = window.jspdf;
@@ -989,38 +1181,148 @@ window.downloadPDFReport = function () {
   doc.save(`AuditReport_${new Date().toISOString().slice(0, 10)}.pdf`);
 };
 
-// Auto-fill & Open Booking Modal
-window.openBookingModal = async function (serviceName) {
+const goalPlatformMap = {
+  "Ecommerce": [
+    "Shopify", "WooCommerce", "Magento / Adobe Commerce", "BigCommerce",
+    "Wix Ecommerce", "Squarespace Commerce", "PrestaShop", "Shopware",
+    "OpenCart", "Ecwid", "Custom Ecommerce", "Other"
+  ],
+  "Lead Generation": [
+    "WordPress", "Webflow", "Wix", "Squarespace", "HubSpot CMS",
+    "Shopify", "Framer", "Joomla", "Drupal", "Next.js / React",
+    "Custom Website", "Other"
+  ],
+  "GHL / Funnel": [
+    "GoHighLevel / LeadConnector", "ClickFunnels", "Systeme.io", "Kajabi",
+    "Kartra", "Unbounce", "Leadpages", "Instapage", "SamCart",
+    "ThriveCart", "FunnelKit", "Custom Funnel", "Other"
+  ],
+  "Booking / Appointment": [
+    "Calendly", "Acuity Scheduling", "HubSpot Meetings", "Bookly",
+    "Amelia", "SimplyBook.me", "Mews", "Cloudbeds", "Mindbody",
+    "Fresha", "Cal.com", "Custom Booking System", "Other"
+  ],
+  "Phone Call Tracking": [
+    "CallRail", "CallTrackingMetrics", "WhatConverts", "Google Ads Calls",
+    "Twilio", "GoHighLevel Call Tracking", "Invoca", "Ringba",
+    "Marchex", "Custom Call Tracking", "Other"
+  ],
+  "SaaS / Subscription": [
+    "Custom SaaS / Web App", "Stripe", "Paddle", "Chargebee", "Recurly",
+    "Memberstack", "Firebase", "Supabase", "Auth0", "Lemon Squeezy",
+    "Shopify Subscription", "WooCommerce Subscription", "Other"
+  ],
+  "Offline Conversion": [
+    "HubSpot", "Salesforce", "GoHighLevel", "Zoho CRM", "Pipedrive",
+    "Microsoft Dynamics 365", "Google Sheets", "Airtable", "Zapier",
+    "Make", "n8n", "Custom CRM", "Other"
+  ],
+  "Other": [
+    "Custom Website", "Custom Web App", "Mobile App", "LMS / Course Platform",
+    "Membership Platform", "Affiliate Platform", "Webinar Platform",
+    "Donation Platform", "Event / Ticketing Platform", "Publisher / Blog",
+    "Custom Tracking", "Other"
+  ]
+};
+
+window.onBusinessGoalChanged = function () {
+  const goalSelect = document.getElementById("bmGoal");
+  const platformSelect = document.getElementById("bmPlatform");
+  const platformLabel = document.getElementById("bmPlatformLabel");
+  
+  if (!goalSelect || !platformSelect) return;
+
+  const selectedGoal = goalSelect.value;
+  
+  if (platformLabel) {
+    platformLabel.innerText = selectedGoal === "SaaS / Subscription" ? "SaaS / Billing Platform" : "Platform";
+  }
+
+  platformSelect.innerHTML = '<option value="" disabled selected>Choose Platform</option>';
+
+  if (goalPlatformMap[selectedGoal]) {
+    goalPlatformMap[selectedGoal].forEach(item => {
+      const opt = document.createElement("option");
+      opt.value = item;
+      opt.innerText = item;
+      platformSelect.appendChild(opt);
+    });
+  }
+};
+
+window.openBookingModal = function (serviceName) {
   const modal = document.getElementById("bookingModal");
   const serviceInput = document.getElementById("bmServiceType");
   const siteUrlInput = document.getElementById("bmSiteUrl");
+  const goalSelect = document.getElementById("bmGoal");
   const platformSelect = document.getElementById("bmPlatform");
-  const formSelect = document.getElementById("bmFormType");
+  const objectiveInput = document.getElementById("bmObjective");
+  const marketingInput = document.getElementById("bmMarketingPlatform");
   const nameInput = document.getElementById("bmName");
   const emailInput = document.getElementById("bmEmail");
+  const modalTitle = document.getElementById("bmModalTitle");
+  const modalDesc = document.getElementById("bmModalDesc");
+  const notesLabel = document.getElementById("bmNotesLabel");
+  const notesInput = document.getElementById("bmNotes");
+  const submitBtnText = document.getElementById("bmSubmitBtnText");
 
   if (serviceInput) serviceInput.value = serviceName;
 
-  if (siteUrlInput && window.currentAuditedUrl) {
-    siteUrlInput.value = window.currentAuditedUrl;
-    if (platformSelect) {
-      platformSelect.value = window.lastDetectedPlatform || "Shopify";
-    }
-    if (formSelect) {
-      formSelect.value = window.lastDetectedForm || "Standard / Native Form";
+  if (modalTitle) {
+    if (serviceName === "Book Tracking Setup") {
+      modalTitle.innerText = "Book Expert Tracking Setup";
+    } else {
+      modalTitle.innerText = "Fix Your Tracking Issues";
     }
   }
 
-  const { data: { session } } = await window.sbClient.auth.getSession();
-  if (session && session.user) {
-    if (emailInput) emailInput.value = session.user.email || "";
-    if (nameInput) {
-      nameInput.value =
-        session.user.user_metadata?.full_name ||
-        session.user.user_metadata?.name ||
-        "";
+  if (modalDesc) {
+    if (serviceName === "Book Tracking Setup") {
+      modalDesc.innerText = "Scale your business with precision data! Let our experts build a flawless tracking infrastructure so you never miss a single conversion.";
+    } else {
+      modalDesc.innerText = "Don't let broken data burn your ad budget! Our senior analytics engineers will diagnose and permanently fix your tracking gaps.";
     }
   }
+
+  if (submitBtnText) {
+    if (serviceName === "Book Tracking Setup") {
+      submitBtnText.innerText = "Submit Setup Request";
+    } else {
+      submitBtnText.innerText = "Submit Fix Request";
+    }
+  }
+
+  if (notesLabel && notesInput) {
+    if (serviceName === "Fix Tracking Issues") {
+      notesLabel.innerText = "Describe Your Tracking Issues";
+      notesInput.placeholder = "Mention what is not working (e.g. Purchases not tracking in GA4...)";
+    } else {
+      notesLabel.innerText = "Issue Description / Requirements (Optional)";
+      notesInput.placeholder = "Tell us about your tracking goals or issues...";
+    }
+  }
+
+  if (siteUrlInput) {
+    siteUrlInput.value = (serviceName === "Fix Tracking Issues" && window.currentAuditedUrl) ? window.currentAuditedUrl : "";
+    siteUrlInput.placeholder = "https://yourwebsite.com";
+  }
+
+  if (goalSelect) goalSelect.selectedIndex = 0;
+  if (platformSelect) {
+    platformSelect.innerHTML = '<option value="" disabled selected>Choose Goal First</option>';
+  }
+
+  if (objectiveInput) objectiveInput.value = "";
+  if (marketingInput) marketingInput.value = "";
+
+  const countrySelect = document.getElementById("bmCountrySelect");
+  if (countrySelect) countrySelect.selectedIndex = 0;
+
+  const phoneInput = document.getElementById("bmWhatsApp");
+  if (phoneInput) phoneInput.value = "";
+
+  if (emailInput) emailInput.value = localStorage.getItem("verified_user_email") || "";
+  if (nameInput) nameInput.value = localStorage.getItem("signup_fullName") || "";
 
   window.onCountryChanged("booking");
   if (modal) modal.classList.remove("hidden");
@@ -1031,20 +1333,18 @@ window.closeBookingModal = function () {
   if (modal) modal.classList.add("hidden");
 };
 
-// ==========================================
-// 2. Booking Submit Handler (LocalStorage + DataLayer)
-// ==========================================
 window.handleBookingSubmit = async function () {
   const isEmailValid = window.validateEmailLive("bmEmail", "bmEmailWarning");
   if (!isEmailValid) {
-    alert("Please enter a valid, non-spam work email.");
+    window.showNotificationModal("warning", "Invalid Email", "Please enter a valid, active business email.");
     return;
   }
 
   const isPhoneValid = window.validatePhoneLive("booking");
   if (!isPhoneValid) {
     const selectEl = document.getElementById("bmCountrySelect");
-    alert("Please enter a valid WhatsApp number for " + selectEl.options[selectEl.selectedIndex].value + ".");
+    const countryName = selectEl && selectEl.selectedIndex > 0 ? selectEl.options[selectEl.selectedIndex].value : "your country";
+    window.showNotificationModal("warning", "Invalid WhatsApp", `Please select a country and enter a valid WhatsApp contact number for ${countryName}.`);
     return;
   }
 
@@ -1052,85 +1352,89 @@ window.handleBookingSubmit = async function () {
   const email = document.getElementById("bmEmail").value.trim().toLowerCase();
   const fullWhatsApp = document.getElementById("bmWhatsApp").value.trim();
   const selectEl = document.getElementById("bmCountrySelect");
-  const countryName = selectEl.options[selectEl.selectedIndex].value;
+  const countryName = selectEl && selectEl.selectedIndex > 0 ? selectEl.options[selectEl.selectedIndex].value : "Not Specified";
   const formattedWhatsApp = toWhatsAppLink(fullWhatsApp);
 
-  // LocalStorage বুকিং ডুপ্লিকেট চেকিং
-  const existingBookingEmail = localStorage.getItem("booking_email");
-  const existingBookingPhone = localStorage.getItem("booking_phone");
-
-  if (existingBookingEmail === email || existingBookingPhone === formattedWhatsApp) {
-    alert("তুমি ইতিমধ্যেই বুকিং করেছ। আমাদের টিম খুব শীঘ্রই তোমার সাথে যোগাযোগ করবে।");
-    window.closeBookingModal();
-    return;
-  }
-
   const siteUrl = document.getElementById("bmSiteUrl").value.trim();
+  const goal = document.getElementById("bmGoal").value;
   const platform = document.getElementById("bmPlatform").value;
-  const formType = document.getElementById("bmFormType").value;
+  const objective = document.getElementById("bmObjective").value.trim();
+  const marketingPlatform = document.getElementById("bmMarketingPlatform").value.trim();
   const service = document.getElementById("bmServiceType").value;
   const notes = document.getElementById("bmNotes").value.trim();
   const btn = document.getElementById("bmSubmitBtn");
+  const submitBtnText = document.getElementById("bmSubmitBtnText");
+
+  if (!countryName || countryName === "Not Specified") {
+    window.showNotificationModal("warning", "Country Required", "Please select your country from the list.");
+    return;
+  }
 
   btn.disabled = true;
-  btn.innerText = "Submitting...";
+  if (submitBtnText) submitBtnText.innerText = "Submitting...";
+
+  const isSetupBooking = service === "Book Tracking Setup";
+  const formNameVal = isSetupBooking ? "Book_Tracking" : "Fix_Tracking";
+  const dataLayerEventName = isSetupBooking ? "book_tracking_success" : "fix_tracking_success";
 
   const payload = {
-    type: "booking",
+    form_name: formNameVal,
     full_name: name,
     email: email,
     whatsapp: formattedWhatsApp,
     country: countryName,
     website_url: siteUrl,
+    business_goal: goal,
     platform: platform,
-    form_type: formType,
-    service_requested: service,
-    notes: notes,
+    tracking_objective: objective,
+    marketing_platform: marketingPlatform,
+    description: notes,
+    remarks: "Lead"
   };
 
   try {
     await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
       method: "POST",
       mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload),
     });
   } catch (e) {
     console.error("Google Sheets Error:", e);
   }
 
-  try {
-    await window.sbClient.from("leads").insert([payload]);
-  } catch (e) {
-    console.error("Supabase Backup Error:", e);
-  }
-
-  // LocalStorage-এ বুকিং তথ্য সংরক্ষণ
-  localStorage.setItem("booking_fullName", name);
-  localStorage.setItem("booking_email", email);
-  localStorage.setItem("booking_country", countryName);
-  localStorage.setItem("booking_phone", formattedWhatsApp);
-
-  // GTM DataLayer Push for Booking Request Event
   window.dataLayer.push({
-    event: "booking_request_success",
+    event: dataLayerEventName,
     user_data: {
       name: name,
       email: email,
       phone: formattedWhatsApp,
-      country: countryName
+      country: countryName,
+      website_url: siteUrl,
+      business_goal: goal,
+      platform: platform,
+      tracking_objective: objective,
+      marketing_platform: marketingPlatform,
+      remarks: "Lead"
     }
   });
 
   btn.disabled = false;
-  btn.innerText = "Submit Booking Request";
+  if (submitBtnText) {
+    submitBtnText.innerText = isSetupBooking ? "Submit Setup Request" : "Submit Fix Request";
+  }
 
-  alert("Thank you! Your request has been sent. We will reach out to your Email/WhatsApp within a few hours.");
-  window.closeBookingModal();
+  window.showNotificationModal(
+    "success",
+    "Request Received Successfully!",
+    "Thank you! Your details have been submitted. Our tracking engineering lead will review your request and get in touch shortly.",
+    () => {
+      window.closeBookingModal();
+    }
+  );
 };
 
-// DOM Content Loaded Listener
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
   const form = document.getElementById("signupForm");
   if (form) {
     form.addEventListener("submit", function (e) {
@@ -1141,19 +1445,57 @@ document.addEventListener("DOMContentLoaded", function () {
 
   window.onCountryChanged("signup");
 
-  window.sbClient.auth.getSession().then((res) => {
-    if (res.data && res.data.session) {
-      window.showView("dashboard");
-    } else {
-      window.showView("signup");
-    }
-  });
+  const hash = window.location.hash;
+  if (hash && hash.includes("access_token")) {
+    await new Promise(resolve => setTimeout(resolve, 600));
+  }
 
-  window.sbClient.auth.onAuthStateChange((event, session) => {
-    if (session) {
-      window.showView("dashboard");
+  const { data: { session }, error } = await window.sbClient.auth.getSession();
+
+  if (error || !session || !session.user) {
+    window.clearSessionData();
+    const verifiedUserEmail = localStorage.getItem("verified_user_email");
+    if (verifiedUserEmail) {
+      window.showView("login");
     } else {
       window.showView("signup");
     }
-  });
+    return;
+  }
+
+  const user = session.user;
+  const email = (user.email || "").trim().toLowerCase();
+  const fullName = user.user_metadata?.full_name || user.user_metadata?.name || email.split("@")[0] || "User";
+  const phone = user.user_metadata?.phone || "";
+  const country = user.user_metadata?.country || "United States";
+
+  const googleSignupSyncedKey = `google_synced_${email}`;
+  if (!localStorage.getItem(googleSignupSyncedKey)) {
+    try {
+      await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          form_name: "Sign_Up",
+          full_name: fullName,
+          email: email,
+          country: country,
+          phone: phone || "Google OAuth",
+          remarks: "Lead"
+        }),
+      });
+      localStorage.setItem(googleSignupSyncedKey, "true");
+    } catch (err) {
+      console.error("Google user sheet sync error:", err);
+    }
+  }
+
+  localStorage.setItem("user_logged_in", "true");
+  localStorage.setItem("verified_user_email", email);
+  localStorage.setItem("signup_fullName", fullName);
+  localStorage.setItem("signup_country", country);
+  if (phone) localStorage.setItem("signup_phone", phone);
+
+  window.showView("dashboard");
 });
