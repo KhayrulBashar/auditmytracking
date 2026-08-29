@@ -119,9 +119,41 @@ window.runAudit = async function () {
   const issuesSummaryBadge = document.getElementById("issuesSummaryBadge");
 
   let url = urlInput.value.trim();
-  if (!url) return;
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    url = "https://" + url;
+  if (!url) {
+    window.showNotificationModal(
+      "warning",
+      "Website URL Required",
+      "Please enter a website address to run the audit."
+    );
+    return;
+  }
+
+  // ইউজার যেভাবেই দিক (domain / www / http / https) — স্বাভাবিক করে নাও
+  // অতিরিক্ত space সরাও, শুরুতে http/https না থাকলে https:// যোগ করো
+  url = url.replace(/\s+/g, "");
+  if (!/^https?:\/\//i.test(url)) {
+    url = "https://" + url.replace(/^\/+/, "");
+  }
+
+  // বৈধ domain ফরম্যাট যাচাই: অন্তত একটা dot + TLD (.com/.io/.net ইত্যাদি) থাকতে হবে।
+  // এতে "asdf", "hello world" জাতীয় ভুল input Edge Function কল করার আগেই আটকায়।
+  let validHost = false;
+  try {
+    const u = new URL(url);
+    // host এ অন্তত একটা dot আর TLD এ ২+ অক্ষর থাকতে হবে (example.com)
+    validHost = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(u.hostname) &&
+                /\.[a-z]{2,}$/i.test(u.hostname);
+  } catch (e) {
+    validHost = false;
+  }
+
+  if (!validHost) {
+    window.showNotificationModal(
+      "warning",
+      "Invalid Website URL",
+      "That does not look like a valid website address. Please enter a correct link (e.g. example.com or https://example.com) and try again."
+    );
+    return;
   }
 
   // পথ A: guest হলে audit চালানোর আগে signup পেজে পাঠাও (আসল session যাচাই)
@@ -179,9 +211,9 @@ window.runAudit = async function () {
 
     window.showNotificationModal(
       "error",
-      "Scan Failed",
+      "Website Not Reachable",
       (auditResp && auditResp.message) ||
-        "We couldn't reach that site. Please check the URL and try again."
+        "We couldn't reach that website. It may not exist, may be offline, or the address may be incorrect. Please enter a valid, live website link and try again."
     );
     return;
   }

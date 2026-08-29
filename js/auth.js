@@ -192,16 +192,22 @@ window.handleLogoClick = async function () {
   const verifiedSavedEmail = localStorage.getItem("verified_user_email");
 
   if (loggedOut) {
-    // logout অবস্থা: verified থাকলে login, নাহলে signup — dashboard নয়
+    // logout অবস্থা: verified থাকলে login পেজ (dashboard নয়)
     window.showView(verifiedSavedEmail ? "login" : "signup");
     return;
   }
 
   const hasSession = await window.requireSessionForDashboard();
   if (hasSession) {
+    // logged-in ইউজার → dashboard
     window.showView("dashboard");
+  } else if (verifiedSavedEmail) {
+    // আগে signup করেছে কিন্তু এখন session নেই → login পেজ
+    window.showView("login");
   } else {
-    window.showView(verifiedSavedEmail ? "login" : "signup");
+    // fresh guest (কখনো signup করেনি) → dashboard এই থাকবে, কিছু খুলবে না।
+    // শুধু উপরের Sign Up আর নিচের Run Free Audit signup এ পাঠাবে।
+    window.showView("dashboard");
   }
 };
 
@@ -284,24 +290,25 @@ window.updateNavHeader = function (state) {
 
   if (state === "user") {
     navArea.innerHTML = `
-      <button type="button" onclick="window.openBookingModal('Book Tracking Setup')" class="flex items-center text-xs sm:text-sm font-semibold bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-bold px-3.5 py-1.5 rounded-xl transition shadow-lg shadow-cyan-500/20 cursor-pointer">
-        Book Tracking Setup
+      <button type="button" onclick="window.openBookingModal('Book Tracking Setup')" class="flex items-center text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 px-2.5 sm:px-3.5 py-1.5 rounded-lg sm:rounded-xl transition shadow-lg shadow-cyan-500/20 cursor-pointer whitespace-nowrap">
+        <span class="sm:hidden">Book Setup</span>
+        <span class="hidden sm:inline">Book Tracking Setup</span>
       </button>
-      <button type="button" onclick="window.handleLogout()" class="text-sm font-semibold bg-rose-600/80 hover:bg-rose-500 text-white px-3.5 py-1.5 rounded-lg transition cursor-pointer">
+      <button type="button" onclick="window.handleLogout()" class="text-xs sm:text-sm font-semibold bg-rose-600/80 hover:bg-rose-500 text-white px-2.5 sm:px-3.5 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap">
         Log Out
       </button>
     `;
   } else if (state === "returning") {
     // logout অবস্থা: verified ইউজার — Log In দেখাও (Sign Up নয়)
     navArea.innerHTML = `
-      <button type="button" onclick="window.showView('login')" class="text-sm font-semibold bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-bold px-4 py-1.5 rounded-lg transition shadow-lg shadow-cyan-500/20 cursor-pointer">
+      <button type="button" onclick="window.showView('login')" class="text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 px-3.5 sm:px-4 py-1.5 rounded-lg transition shadow-lg shadow-cyan-500/20 cursor-pointer whitespace-nowrap">
         Log In
       </button>
     `;
   } else {
     // fresh guest: Sign Up দেখাও
     navArea.innerHTML = `
-      <button type="button" onclick="window.showView('signup')" class="text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg transition cursor-pointer">
+      <button type="button" onclick="window.showView('signup')" class="text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 sm:px-4 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap">
         Sign Up
       </button>
     `;
@@ -378,22 +385,9 @@ window.handleSignup = async function () {
   suBtn.innerText = "Sending Verification OTP...";
   suBtn.disabled = true;
 
-  // ⚡ স্পিড ফিক্স: Sheet sync আর OTP একসাথে (parallel) চালানো হয়,
-  // আগে Sheet শেষ হওয়ার জন্য অপেক্ষা করত (ধীর ছিল)
-  const sheetSync = fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({
-      form_name: "Sign_Up",
-      full_name: full_name,
-      email: email,
-      whatsapp: cleanPhoneLink,
-      country: countryName,
-      remarks: "Lead"
-    }),
-  }).catch((e) => console.error("Sheet Sync Error:", e));
-
+  // ⚠️ নিরাপত্তা: এখানে Sheet এ Sign_Up পাঠানো হয় না।
+  // OTP verify সফল হলে তবেই verifyOtp() থেকে Sheet এ যাবে — যাতে
+  // ভুয়া/unverified ইমেইল কখনো Sheet এ না ঢোকে।
   const otpPromise = window.sbClient.auth.signInWithOtp({
     email: email,
     options: {
@@ -406,7 +400,7 @@ window.handleSignup = async function () {
     },
   });
 
-  const [res] = await Promise.all([otpPromise, sheetSync]);
+  const res = await otpPromise;
 
   suBtn.innerText = "Register & Send Verification Code";
   suBtn.disabled = false;
@@ -518,6 +512,9 @@ window.verifyOtp = async function () {
   const tokenInput = document.getElementById("loginOtp");
   const token = (tokenInput ? tokenInput.value : "").trim();
   const email = window.tempAuthData?.email || "";
+  // signup নাকি login flow — Sheet এ Sign_Up পাঠানোর সিদ্ধান্তে লাগবে
+  // (tempAuthData পরে null হয়ে যায়, তাই এখনই ধরে রাখি)
+  const wasSignup = window.tempAuthData?.type === "signup";
   const btn = document.getElementById("otpVerifyBtn");
 
   if (!email) {
@@ -583,6 +580,24 @@ window.verifyOtp = async function () {
     localStorage.setItem("signup_phone", window.tempAuthData.phone);
   }
   window.tempAuthData = null;
+
+  // ✅ নিরাপত্তা: OTP verify সফল হয়েছে — এখন তবেই Sheet এ Sign_Up পাঠাও।
+  // শুধু signup flow এর জন্য (login এর সময় নয়, কারণ login মানে আগেই signup হয়েছে)।
+  if (wasSignup) {
+    fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        form_name: "Sign_Up",
+        full_name: localStorage.getItem("signup_fullName") || "",
+        email: email,
+        whatsapp: localStorage.getItem("signup_phone") || "",
+        country: localStorage.getItem("signup_country") || "",
+        remarks: "Lead"
+      }),
+    }).catch((e) => console.error("Sheet Sync Error:", e));
+  }
 
   window.dataLayer.push({
     event: "login_success",
