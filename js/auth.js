@@ -1,27 +1,46 @@
+// ============================================================================
+// auth.js — Auth, Validation, View Control (Supabase session ভিত্তিক, হ্যাক-প্রুফ)
+// পথ ক: logout করলেও Supabase session রাখা হয়, তাই re-login OTP ছাড়া হয়।
+// dashboard access-এর একমাত্র সত্য = Supabase session (localStorage flag নয়)।
+// ============================================================================
+
 // Supabase Auth State Change Listener
 window.sbClient.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_OUT' || !session) {
-    window.clearSessionData();
-    if (typeof window.showView === "function") {
-      window.showView("login");
+  if (event === "SIGNED_OUT" || !session) {
+    // শুধু session না থাকলে guest hint অনুযায়ী view দেখাবে (data মুছবে না)
+    if (typeof window.showView === "function" && !window.suppressAuthRedirect) {
+      const hint = localStorage.getItem("verified_user_email");
+      window.showView(hint ? "login" : "signup");
     }
   }
 });
 
-// ইউজার ডিলিট বা লগআউট হলে ব্রাউজারের সমস্ত ডেটা ও সেশন চিরতরে রিমুভ করার ফাংশন
-window.clearSessionData = function () {
-  localStorage.clear(); // ব্রাউজারের লোকাল স্টোরেজের সমস্ত ডেটা মুছে ফেলবে
-
+// ইউজারের অডিট-সম্পর্কিত অস্থায়ী ডেটা পরিষ্কার (session/verified email রাখে)
+window.clearAuditState = function () {
   window.currentAuditData = [];
   window.currentAuditedUrl = "";
-
   const targetUrlInput = document.getElementById("targetUrl");
   const resultsDiv = document.getElementById("results");
   const auditRows = document.getElementById("auditRows");
-  
   if (targetUrlInput) targetUrlInput.value = "";
   if (resultsDiv) resultsDiv.classList.add("hidden");
   if (auditRows) auditRows.innerHTML = "";
+};
+
+// সম্পূর্ণ সেশন ডেটা মুছে ফেলা (শুধু অ্যাকাউন্ট ডিলিট বা হার্ড রিসেটে ব্যবহার্য)
+window.clearSessionData = function () {
+  localStorage.clear();
+  window.clearAuditState();
+};
+
+// dashboard খোলার আগে সবসময় আসল Supabase session যাচাই করে (হ্যাক-প্রুফ গেট)
+window.requireSessionForDashboard = async function () {
+  try {
+    const { data: { session } } = await window.sbClient.auth.getSession();
+    return !!(session && session.user);
+  } catch (e) {
+    return false;
+  }
 };
 
 window.onCountryChanged = function (formType) {
@@ -31,11 +50,22 @@ window.onCountryChanged = function (formType) {
   if (!selectEl || !phoneInput) return;
 
   const selectedOpt = selectEl.options[selectEl.selectedIndex];
-  if (!selectedOpt || !selectedOpt.value) return;
 
+  // "Choose Country" (খালি value) সিলেক্ট থাকলে → placeholder দেখাও, ফিল্ড খালি
+  if (!selectedOpt || !selectedOpt.value) {
+    phoneInput.value = "";
+    phoneInput.placeholder = "123456789";
+    return;
+  }
+
+  // country বাছা হলে → placeholder সরিয়ে country code বসাও, cursor code এর পরে
   const code = selectedOpt.getAttribute("data-code") || "";
-  phoneInput.value = code ? code + " " : "";
+  phoneInput.placeholder = "";
+  phoneInput.value = code ? code : "";
   phoneInput.focus();
+  // cursor কে code এর পরে নিয়ে যাও যাতে ইউজার সরাসরি নাম্বার টাইপ করতে পারে
+  const len = phoneInput.value.length;
+  try { phoneInput.setSelectionRange(len, len); } catch (e) {}
 
   if (isSignup) {
     window.validatePhoneLive("signup");
@@ -50,7 +80,10 @@ window.validatePhoneLive = function (formType) {
   if (!selectEl || !phoneInput) return true;
 
   const selectedOpt = selectEl.options[selectEl.selectedIndex];
-  if (!selectedOpt || !selectedOpt.value) return true;
+  if (!selectedOpt || !selectedOpt.value) {
+    // country না বাছলে ফোন ভ্যালিডেশন এখানে আটকাবে না (country চেক আলাদা)
+    return true;
+  }
 
   const countryName = selectedOpt.value;
   const prefix = selectedOpt.getAttribute("data-code") || "+1";
@@ -60,11 +93,11 @@ window.validatePhoneLive = function (formType) {
   let val = phoneInput.value;
 
   if (!val.startsWith(prefix)) {
-    val = prefix + " " + val.replace(/\D/g, "");
+    val = prefix + val.replace(/\D/g, "");
   }
 
   const afterPrefix = val.substring(prefix.length).replace(/\D/g, "");
-  phoneInput.value = prefix + " " + afterPrefix;
+  phoneInput.value = prefix + afterPrefix;
 
   if (warningEl) {
     if (!afterPrefix) {
@@ -86,6 +119,7 @@ window.validatePhoneLive = function (formType) {
   return true;
 };
 
+// নাম ভ্যালিডেশন — junk keyword (test/fake/demo ...) ব্লক করে (পথ A)
 window.validateNameLive = function () {
   const nameInput = document.getElementById("suFullName");
   const warningEl = document.getElementById("nameWarning");
@@ -103,6 +137,15 @@ window.validateNameLive = function () {
 
   if (trimmed.length < 2) {
     warningEl.innerText = "Name must be at least 2 letters long.";
+    warningEl.classList.remove("hidden");
+    return false;
+  }
+
+  // junk keyword চেক — নামের শব্দগুলোর সাথে মেলালে ব্লক
+  const words = trimmed.toLowerCase().split(/\s+/);
+  const junkHit = words.find((w) => JUNK_KEYWORDS.includes(w));
+  if (junkHit) {
+    warningEl.innerText = "Please enter your real full name.";
     warningEl.classList.remove("hidden");
     return false;
   }
@@ -142,17 +185,23 @@ window.validateEmailLive = function (inputId = "suEmail", warningId = "emailWarn
   return true;
 };
 
-window.handleLogoClick = function () {
-  const isUserLoggedIn = localStorage.getItem("user_logged_in");
-  if (isUserLoggedIn === "true") {
+// লোগো ক্লিক — logout অবস্থায় dashboard খুলবে না, login/signup এ পাঠাবে
+window.handleLogoClick = async function () {
+  // ইউজার logout করেছে? (session থাকলেও dashboard access বন্ধ)
+  const loggedOut = localStorage.getItem("user_logged_out") === "true";
+  const verifiedSavedEmail = localStorage.getItem("verified_user_email");
+
+  if (loggedOut) {
+    // logout অবস্থা: verified থাকলে login, নাহলে signup — dashboard নয়
+    window.showView(verifiedSavedEmail ? "login" : "signup");
+    return;
+  }
+
+  const hasSession = await window.requireSessionForDashboard();
+  if (hasSession) {
     window.showView("dashboard");
   } else {
-    const verifiedSavedEmail = localStorage.getItem("verified_user_email");
-    if (verifiedSavedEmail) {
-      window.showView("login");
-    } else {
-      window.showView("signup");
-    }
+    window.showView(verifiedSavedEmail ? "login" : "signup");
   }
 };
 
@@ -179,10 +228,11 @@ window.showView = function (view) {
   if (view === "signup") {
     document.getElementById("viewSignup").classList.remove("hidden");
     window.onCountryChanged("signup");
-    window.updateNavHeader(false);
+    window.updateNavHeader("guest");
   } else if (view === "login") {
     document.getElementById("viewLogin").classList.remove("hidden");
-    window.updateNavHeader(false);
+    // verified email থাকলে "returning" (Log In বাটন), নাহলে "guest" (Sign Up)
+    window.updateNavHeader(verifiedSavedEmail ? "returning" : "guest");
 
     const loginGoogleArea = document.getElementById("loginGoogleArea");
     const loginEmailInput = document.getElementById("loginEmail");
@@ -191,6 +241,7 @@ window.showView = function (view) {
     const loginSubtitle = document.getElementById("loginSubtitle");
     const loginSignupPrompt = document.getElementById("loginSignupPrompt");
 
+    // পথ ক: verified email থাকলে "returning user" login — শুধু email, OTP ছাড়া
     if (verifiedSavedEmail) {
       if (loginGoogleArea) loginGoogleArea.classList.add("hidden");
       if (loginSignupPrompt) loginSignupPrompt.classList.add("hidden");
@@ -211,20 +262,27 @@ window.showView = function (view) {
     }
   } else if (view === "dashboard") {
     document.getElementById("viewDashboard").classList.remove("hidden");
-    window.updateNavHeader(true);
-    if (!typewriterTimeout && !processingInterval) {
-      startTypewriter();
+    // guest নাকি logged-in তা session দিয়ে ঠিক হয় (async, নিচে updateNavHeader এ)
+    window.refreshDashboardNav();
+    // গার্ডেড স্টার্টার (audit.js এ) — overlap/দ্রুত হওয়া রোধ করে
+    if (typeof window.startTypewriterSafe === "function") {
+      window.startTypewriterSafe();
     }
   }
 };
 
-window.updateNavHeader = function (isLoggedIn) {
+// dashboard-এ nav ঠিক করা — session থাকলে logged-in nav, নাহলে guest nav
+window.refreshDashboardNav = async function () {
+  const hasSession = await window.requireSessionForDashboard();
+  window.updateNavHeader(hasSession ? "user" : "guest");
+};
+
+// nav header — states: "user" (logged in), "returning" (logged out, known), "guest"
+window.updateNavHeader = function (state) {
   const navArea = document.getElementById("navAuthArea");
   if (!navArea) return;
 
-  const verifiedSavedEmail = localStorage.getItem("verified_user_email");
-
-  if (isLoggedIn) {
+  if (state === "user") {
     navArea.innerHTML = `
       <button type="button" onclick="window.openBookingModal('Book Tracking Setup')" class="flex items-center text-xs sm:text-sm font-semibold bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-bold px-3.5 py-1.5 rounded-xl transition shadow-lg shadow-cyan-500/20 cursor-pointer">
         Book Tracking Setup
@@ -233,19 +291,20 @@ window.updateNavHeader = function (isLoggedIn) {
         Log Out
       </button>
     `;
+  } else if (state === "returning") {
+    // logout অবস্থা: verified ইউজার — Log In দেখাও (Sign Up নয়)
+    navArea.innerHTML = `
+      <button type="button" onclick="window.showView('login')" class="text-sm font-semibold bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-bold px-4 py-1.5 rounded-lg transition shadow-lg shadow-cyan-500/20 cursor-pointer">
+        Log In
+      </button>
+    `;
   } else {
-    if (verifiedSavedEmail) {
-      navArea.innerHTML = ``;
-    } else {
-      navArea.innerHTML = `
-        <button type="button" onclick="window.showView('login')" class="text-sm font-semibold text-slate-300 hover:text-white px-3 py-1.5 transition cursor-pointer">
-          Log In
-        </button>
-        <button type="button" onclick="window.showView('signup')" class="text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg transition cursor-pointer">
-          Sign Up
-        </button>
-      `;
-    }
+    // fresh guest: Sign Up দেখাও
+    navArea.innerHTML = `
+      <button type="button" onclick="window.showView('signup')" class="text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg transition cursor-pointer">
+        Sign Up
+      </button>
+    `;
   }
 };
 
@@ -275,12 +334,25 @@ function activateOtpScreen(email) {
 window.handleSignup = async function () {
   const isNameValid = window.validateNameLive();
   const isEmailValid = window.validateEmailLive("suEmail", "emailWarning");
-  const isPhoneValid = window.validatePhoneLive("signup");
 
+  // country বাছাই বাধ্যতামূলক (placeholder "Choose Country" থাকলে আটকাবে)
+  const selectEl = document.getElementById("suCountrySelect");
+  const selectedOpt = selectEl ? selectEl.options[selectEl.selectedIndex] : null;
+  const countryChosen = selectedOpt && selectedOpt.value;
+
+  if (!countryChosen) {
+    const warn = document.getElementById("phoneWarning");
+    if (warn) {
+      warn.innerText = "Please choose your country.";
+      warn.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const isPhoneValid = window.validatePhoneLive("signup");
   if (!isNameValid || !isEmailValid || !isPhoneValid) return;
 
-  const selectEl = document.getElementById("suCountrySelect");
-  const countryName = selectEl.options[selectEl.selectedIndex].value;
+  const countryName = selectedOpt.value;
   const full_name = document.getElementById("suFullName").value.trim();
   const email = document.getElementById("suEmail").value.trim().toLowerCase();
   const fullPhone = document.getElementById("suPhone").value.trim();
@@ -302,29 +374,27 @@ window.handleSignup = async function () {
     return;
   }
 
-  try {
-    await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        form_name: "Sign_Up",
-        full_name: full_name,
-        email: email,
-        whatsapp: cleanPhoneLink,
-        country: countryName,
-        remarks: "Lead"
-      }),
-    });
-  } catch (e) {
-    console.error("Sheet Sync Error:", e);
-  }
-
   const suBtn = document.getElementById("suBtn");
   suBtn.innerText = "Sending Verification OTP...";
   suBtn.disabled = true;
 
-  const res = await window.sbClient.auth.signInWithOtp({
+  // ⚡ স্পিড ফিক্স: Sheet sync আর OTP একসাথে (parallel) চালানো হয়,
+  // আগে Sheet শেষ হওয়ার জন্য অপেক্ষা করত (ধীর ছিল)
+  const sheetSync = fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+      form_name: "Sign_Up",
+      full_name: full_name,
+      email: email,
+      whatsapp: cleanPhoneLink,
+      country: countryName,
+      remarks: "Lead"
+    }),
+  }).catch((e) => console.error("Sheet Sync Error:", e));
+
+  const otpPromise = window.sbClient.auth.signInWithOtp({
     email: email,
     options: {
       shouldCreateUser: true,
@@ -335,6 +405,8 @@ window.handleSignup = async function () {
       },
     },
   });
+
+  const [res] = await Promise.all([otpPromise, sheetSync]);
 
   suBtn.innerText = "Register & Send Verification Code";
   suBtn.disabled = false;
@@ -372,19 +444,23 @@ window.handleSignup = async function () {
   }
 };
 
-window.handleDirectLogin = function () {
+// পথ ক: returning user login — Supabase session যাচাই করে, OTP ছাড়া
+window.handleDirectLogin = async function () {
   const emailInput = document.getElementById("loginEmail");
   const inputEmail = (emailInput ? emailInput.value : "").trim().toLowerCase();
-  const verifiedSavedEmail = (localStorage.getItem("verified_user_email") || "").trim().toLowerCase();
 
   if (!inputEmail) {
     window.showNotificationModal("warning", "Email Required", "Please enter your registered work email.");
     return;
   }
 
-  if (verifiedSavedEmail && inputEmail === verifiedSavedEmail) {
-    localStorage.setItem("user_logged_in", "true");
+  // আসল Supabase session আছে কিনা যাচাই — এটাই হ্যাক-প্রুফ গেট
+  const { data: { session } } = await window.sbClient.auth.getSession();
+  const sessionEmail = (session?.user?.email || "").trim().toLowerCase();
 
+  if (session && session.user && sessionEmail === inputEmail) {
+    // session আছে, email মিলেছে → OTP ছাড়াই ঢুকবে (নিরাপদ)
+    localStorage.removeItem("user_logged_out"); // logout flag মুছে দাও
     window.dataLayer.push({
       event: "login_success",
       user_data: {
@@ -392,18 +468,48 @@ window.handleDirectLogin = function () {
         name: localStorage.getItem("signup_fullName") || ""
       }
     });
-
     window.showView("dashboard");
-  } else {
+  } else if (session && session.user && sessionEmail !== inputEmail) {
+    // session আছে কিন্তু অন্য email দিয়েছে
     window.showNotificationModal(
       "warning",
-      "Account Not Recognized",
-      "No verified account found with this email on this device. Please create an account first.",
-      () => {
-        window.showView("signup");
-        const suEmail = document.getElementById("suEmail");
-        if (suEmail) suEmail.value = inputEmail;
-      }
+      "Email Mismatch",
+      `This device is signed in as ${sessionEmail}. Please use that email, or log out first.`
+    );
+  } else {
+    // কোনো session নেই → নিরাপত্তার জন্য নতুন করে verify করতে হবে (OTP পাঠাও)
+    window.showNotificationModal(
+      "warning",
+      "Verification Needed",
+      "For your security, please verify with a one-time code sent to your email.",
+      async () => {
+        const suBtn = document.getElementById("loginBtn");
+        if (suBtn) { suBtn.disabled = true; suBtn.innerText = "Sending Code..."; }
+
+        const res = await window.sbClient.auth.signInWithOtp({
+          email: inputEmail,
+          options: { shouldCreateUser: false },
+        });
+
+        if (suBtn) { suBtn.disabled = false; suBtn.innerText = "Log In to Workspace"; }
+
+        if (res.error) {
+          window.showNotificationModal(
+            "warning",
+            "Account Not Found",
+            "No verified account found with this email. Please create an account first.",
+            () => {
+              window.showView("signup");
+              const suEmail = document.getElementById("suEmail");
+              if (suEmail) suEmail.value = inputEmail;
+            }
+          );
+        } else {
+          window.tempAuthData = { type: "login", email: inputEmail };
+          activateOtpScreen(inputEmail);
+        }
+      },
+      "Send Login Code"
     );
   }
 };
@@ -463,9 +569,25 @@ window.verifyOtp = async function () {
     return;
   }
 
-  localStorage.setItem("user_logged_in", "true");
+  // verified email hint রাখা হয় (returning-user login UI-র জন্য), কিন্তু
+  // dashboard access তবু session দিয়েই যাচাই হবে
+  localStorage.removeItem("user_logged_out"); // login সফল → logout flag মুছে দাও
   localStorage.setItem("verified_user_email", email);
+  if (window.tempAuthData?.fullName) {
+    localStorage.setItem("signup_fullName", window.tempAuthData.fullName);
+  }
+  if (window.tempAuthData?.country) {
+    localStorage.setItem("signup_country", window.tempAuthData.country);
+  }
+  if (window.tempAuthData?.phone) {
+    localStorage.setItem("signup_phone", window.tempAuthData.phone);
+  }
   window.tempAuthData = null;
+
+  window.dataLayer.push({
+    event: "login_success",
+    user_data: { email: email, name: localStorage.getItem("signup_fullName") || "" }
+  });
 
   window.showNotificationModal(
     "success",
@@ -477,12 +599,21 @@ window.verifyOtp = async function () {
   );
 };
 
+// পথ ক: logout করলে session রাখা হয় (signOut করা হয় না), শুধু view পাল্টায়।
+// তাই একই ডিভাইসে email দিয়ে OTP ছাড়া আবার ঢোকা যায়।
 window.handleLogout = async function () {
-  try {
-    await window.sbClient.auth.signOut();
-  } catch (e) {}
-  
-  window.clearSessionData();
+  window.clearAuditState();
+  // logout flag সেট — logo ক্লিকে/reload এ dashboard খুলবে না, login চাইবে
+  localStorage.setItem("user_logged_out", "true");
+  // Note: signOut করা হচ্ছে না — session persist থাকে (returning login OTP ছাড়া)
   window.showView("login");
 };
 
+// সম্পূর্ণ signout (dropdown/menu থেকে "Sign out completely" চাইলে ব্যবহার্য)
+window.handleFullSignOut = async function () {
+  window.suppressAuthRedirect = true;
+  try { await window.sbClient.auth.signOut(); } catch (e) {}
+  window.suppressAuthRedirect = false;
+  window.clearSessionData();
+  window.showView("signup");
+};

@@ -1,3 +1,8 @@
+// ============================================================================
+// app.js — Notification Modal + Boot/Session Init
+// guest হলেও dashboard (অডিট বক্স) দেখাবে; audit চালাতে গেলে signup গেট (পথ A)
+// ============================================================================
+
 window.showNotificationModal = function (type, title, message, callback = null, customBtnText = null) {
   const modal = document.getElementById("customNotifyModal");
   const card = document.getElementById("notifyCard");
@@ -69,6 +74,11 @@ window.closeNotificationModal = function () {
   }
 };
 
+// guest কিনা তা সহজে জানার হেল্পার (audit.js এ audit gating-এ ব্যবহার হয়)
+window.isUserLoggedIn = async function () {
+  return await window.requireSessionForDashboard();
+};
+
 document.addEventListener("DOMContentLoaded", async function () {
   const form = document.getElementById("signupForm");
   if (form) {
@@ -80,30 +90,47 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   window.onCountryChanged("signup");
 
+  // OAuth redirect হলে token সেট হতে একটু সময় দাও
   const hash = window.location.hash;
-  if (hash && hash.includes("access_token")) {
-    await new Promise(resolve => setTimeout(resolve, 600));
+  const isFreshOAuth = hash && hash.includes("access_token");
+  if (isFreshOAuth) {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    // নতুন OAuth লগইন = সফল sign in, তাই logout flag মুছে দাও
+    localStorage.removeItem("user_logged_out");
   }
 
   const { data: { session }, error } = await window.sbClient.auth.getSession();
 
+  // ── GUEST অবস্থা: session নেই ──────────────────────────────────────────
+  // পথ A: guest কেও dashboard (অডিট বক্স) দেখাবো, শুধু audit চালাতে গেলে গেট
   if (error || !session || !session.user) {
-    window.clearSessionData();
-    const verifiedUserEmail = localStorage.getItem("verified_user_email");
-    if (verifiedUserEmail) {
-      window.showView("login");
-    } else {
-      window.showView("signup");
-    }
+    window.showView("dashboard"); // guest dashboard (nav auto guest হবে)
+    // fallback: typewriter নিশ্চিতভাবে চালু আছে কিনা
+    setTimeout(() => {
+      const el = document.getElementById("typewriterText");
+      if (el && !el.innerText.trim() && typeof window.startTypewriterSafe === "function") {
+        window.startTypewriterSafe();
+      }
+    }, 300);
     return;
   }
 
+  // ── LOGOUT অবস্থা: session আছে কিন্তু ইউজার আগে logout করেছে ──────────
+  // পথ ক: session রাখা হয় (OTP ছাড়া re-login এর জন্য), কিন্তু dashboard
+  // খুলবে না — login পেজ দেখাবে যাতে ইউজার নিজে sign in করে
+  if (localStorage.getItem("user_logged_out") === "true") {
+    window.showView("login");
+    return;
+  }
+
+  // ── LOGGED-IN অবস্থা: আসল session আছে ─────────────────────────────────
   const user = session.user;
   const email = (user.email || "").trim().toLowerCase();
   const fullName = user.user_metadata?.full_name || user.user_metadata?.name || email.split("@")[0] || "User";
   const phone = user.user_metadata?.phone || "";
   const country = user.user_metadata?.country || "United States";
 
+  // Google OAuth ইউজারের লিড একবারই Sheet এ পাঠানো হয় (ডুপ্লিকেট রোধ)
   const googleSignupSyncedKey = `google_synced_${email}`;
   if (!localStorage.getItem(googleSignupSyncedKey)) {
     try {
@@ -126,11 +153,22 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   }
 
-  localStorage.setItem("user_logged_in", "true");
+  // auto-fill ও returning-login UI-র জন্য hint সেভ (dashboard access নয়)
   localStorage.setItem("verified_user_email", email);
   localStorage.setItem("signup_fullName", fullName);
   localStorage.setItem("signup_country", country);
   if (phone) localStorage.setItem("signup_phone", phone);
 
   window.showView("dashboard");
+
+  // fallback: dashboard দেখানোর পর typewriter নিশ্চিতভাবে চালু আছে কিনা
+  setTimeout(() => {
+    if (typeof window.startTypewriterSafe === "function") {
+      const el = document.getElementById("typewriterText");
+      // লেখা খালি থাকলে (animation চলছে না) তবেই আবার চালু করো
+      if (el && !el.innerText.trim()) {
+        window.startTypewriterSafe();
+      }
+    }
+  }, 300);
 });

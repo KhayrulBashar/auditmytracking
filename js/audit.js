@@ -72,6 +72,23 @@ function stopProcessingAnimation() {
   startTypewriter();
 }
 
+// গার্ডেড স্টার্টার — চলমান loop বন্ধ করে শুরু থেকে একটাই animation চালায়
+window.startTypewriterSafe = function () {
+  // চলমান typewriter loop বন্ধ করো
+  if (typewriterTimeout) {
+    clearTimeout(typewriterTimeout);
+    typewriterTimeout = null;
+  }
+  // "processing..." animation চললে typewriter চালু করব না (audit চলাকালীন)
+  if (processingInterval) {
+    return;
+  }
+  // index reset করে পরিষ্কার শুরু (আধা-অবস্থা থেকে আটকে যাওয়া রোধ)
+  currentCharIndex = 0;
+  isDeleting = false;
+  startTypewriter();
+};
+
 // Supabase Edge Function থেকে আসল detection আনে
 async function fetchAuditResult(targetUrl) {
   try {
@@ -107,6 +124,23 @@ window.runAudit = async function () {
     url = "https://" + url;
   }
 
+  // পথ A: guest হলে audit চালানোর আগে signup পেজে পাঠাও (আসল session যাচাই)
+  const loggedIn = await window.requireSessionForDashboard();
+  if (!loggedIn) {
+    window.showNotificationModal(
+      "warning",
+      "Create a Free Account",
+      "Please sign up (free) to run your tracking audit and view the full report.",
+      () => {
+        window.showView("signup");
+        const suEmail = document.getElementById("suEmail");
+        if (suEmail) suEmail.focus();
+      },
+      "Sign Up Free"
+    );
+    return;
+  }
+
   window.currentAuditedUrl = url;
 
   // নিজের কনভার্সন ট্র্যাকিং — অডিট শুরু হলো
@@ -120,6 +154,10 @@ window.runAudit = async function () {
   auditBtn.classList.add("animate-brand-wave");
   statusMsg.classList.remove("hidden");
   results.classList.add("hidden");
+
+  // অপশন ১: audit কমপক্ষে এই সময় ধরে "processing" দেখাবে (ms), দ্রুত শেষ হলেও
+  const MIN_AUDIT_MS = 12000; // 12 সেকেন্ড
+  const auditStartTime = Date.now();
 
   startProcessingAnimation();
 
@@ -491,6 +529,12 @@ window.runAudit = async function () {
   `
     )
     .join("");
+
+  // অপশন ১: রেজাল্ট দ্রুত এলে বাকি সময় "processing" দেখাও (কমপক্ষে MIN_AUDIT_MS)
+  const elapsed = Date.now() - auditStartTime;
+  if (elapsed < MIN_AUDIT_MS) {
+    await new Promise((resolve) => setTimeout(resolve, MIN_AUDIT_MS - elapsed));
+  }
 
   auditBtn.disabled = false;
   auditBtn.innerText = "Run Free Audit";

@@ -132,16 +132,73 @@ window.openBookingModal = function (serviceName) {
   if (objectiveInput) objectiveInput.value = "";
   if (marketingInput) marketingInput.value = "";
 
+  // ── লগইন ইউজারের সেভ করা তথ্য থাকলে auto-fill, নাহলে placeholder ──
+  const savedEmail = localStorage.getItem("verified_user_email") || "";
+  const savedName = localStorage.getItem("signup_fullName") || "";
+  const savedCountry = localStorage.getItem("signup_country") || "";
+  const savedPhone = localStorage.getItem("signup_phone") || "";
+
+  if (emailInput) emailInput.value = savedEmail;
+  if (nameInput) nameInput.value = savedName;
+
   const countrySelect = document.getElementById("bmCountrySelect");
-  if (countrySelect) countrySelect.selectedIndex = 0;
-
   const phoneInput = document.getElementById("bmWhatsApp");
-  if (phoneInput) phoneInput.value = "";
 
-  if (emailInput) emailInput.value = localStorage.getItem("verified_user_email") || "";
-  if (nameInput) nameInput.value = localStorage.getItem("signup_fullName") || "";
+  // country ম্যাচ: আসল phone নাম্বারের dial code-কে অগ্রাধিকার দাও।
+  // কারণ Google OAuth এ signup_country ভুল হতে পারে ("United States"), কিন্তু
+  // ইউজার নিজে যে WhatsApp নাম্বার দিয়েছে (+880) সেটাই সঠিক country নির্দেশ করে।
+  let countryMatched = false;
 
-  window.onCountryChanged("booking");
+  // ধাপ ১ (অগ্রাধিকার): সেভ করা phone এর dial code (+880) দিয়ে ম্যাচ
+  if (countrySelect && savedPhone) {
+    const phoneDigits = savedPhone.replace(/[^0-9+]/g, "");
+    // সবচেয়ে লম্বা data-code আগে মেলাও (+1 এর আগে +1876 যাতে ভুল না হয়)
+    let bestMatchIndex = -1;
+    let bestCodeLen = 0;
+    for (let i = 0; i < countrySelect.options.length; i++) {
+      const dc = countrySelect.options[i].getAttribute("data-code") || "";
+      if (dc && phoneDigits.startsWith(dc) && dc.length > bestCodeLen) {
+        bestMatchIndex = i;
+        bestCodeLen = dc.length;
+      }
+    }
+    if (bestMatchIndex >= 0) {
+      countrySelect.selectedIndex = bestMatchIndex;
+      countryMatched = true;
+    }
+  }
+
+  // ধাপ ২ (fallback): phone না থাকলে, সেভ করা country name দিয়ে ম্যাচ
+  if (countrySelect && !countryMatched && savedCountry) {
+    for (let i = 0; i < countrySelect.options.length; i++) {
+      if (countrySelect.options[i].value === savedCountry) {
+        countrySelect.selectedIndex = i;
+        countryMatched = true;
+        break;
+      }
+    }
+  }
+
+  if (countrySelect && !countryMatched) countrySelect.selectedIndex = 0;
+
+  // phone: সেভ থাকলে বসাও; নাহলে country অনুযায়ী prefix বা খালি
+  if (phoneInput) {
+    if (savedPhone) {
+      // WhatsApp link আকারে সেভ থাকতে পারে — শুধু ডিজিট/প্লাস বের করে দেখাও
+      const digits = savedPhone.replace(/[^0-9+]/g, "");
+      phoneInput.value = digits.startsWith("+") ? digits : (digits ? "+" + digits : "");
+    } else {
+      phoneInput.value = "";
+    }
+  }
+
+  // country সিলেক্ট থাকলে prefix ঠিক রাখতে onCountryChanged ডাকো
+  // (কিন্তু সেভ করা phone থাকলে সেটা মুছবে না)
+  if (countryMatched && !savedPhone) {
+    window.onCountryChanged("booking");
+  } else if (!countryMatched) {
+    window.onCountryChanged("booking");
+  }
   if (modal) modal.classList.remove("hidden");
 };
 
