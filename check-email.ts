@@ -20,7 +20,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 // একটা email auth.users এ আছে কিনা দেখে (পেজ ধরে ধরে, case-insensitive)
@@ -35,7 +36,7 @@ async function emailExists(admin: any, email: string): Promise<boolean> {
     const users = data?.users || [];
     if (users.length === 0) break;
     const hit = users.some(
-      (u: any) => (u.email || "").trim().toLowerCase() === target
+      (u: any) => (u.email || "").trim().toLowerCase() === target,
     );
     if (hit) return true;
     if (users.length < perPage) break; // শেষ পেজ
@@ -50,10 +51,13 @@ Deno.serve(async (req: Request) => {
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ ok: false, message: "Method not allowed" }), {
-      status: 405,
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ ok: false, message: "Method not allowed" }),
+      {
+        status: 405,
+        headers: { ...CORS, "Content-Type": "application/json" },
+      },
+    );
   }
 
   try {
