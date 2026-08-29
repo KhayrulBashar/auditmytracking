@@ -23,7 +23,67 @@
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
     <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
 
-    <title>AuditMyTracking - Advanced Analytics & Conversion Inspector</title>
+    <title>
+      Free Website Tracking Audit Tool | GA4, Google Ads &amp; Meta —
+      AuditMyTracking
+    </title>
+
+    <!-- SEO: meta description (Google সার্চ ফলাফলে দেখায়) -->
+    <meta
+      name="description"
+      content="Free website tracking audit tool. Instantly check your GA4, Google Ads, Meta CAPI, GTM and Consent Mode v2 setup. Find missing conversions and fix tracking errors in seconds."
+    />
+    <link rel="canonical" href="https://auditmytracking.com/" />
+
+    <!-- Open Graph (Facebook, LinkedIn শেয়ার preview) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://auditmytracking.com/" />
+    <meta
+      property="og:title"
+      content="Free Website Tracking Audit Tool | GA4, Google Ads & Meta"
+    />
+    <meta
+      property="og:description"
+      content="Instantly check your GA4, Google Ads, Meta CAPI, GTM and Consent Mode v2 setup. Find missing conversions and fix tracking errors in seconds."
+    />
+    <meta
+      property="og:image"
+      content="https://auditmytracking.com/app-logo.svg"
+    />
+    <meta property="og:site_name" content="AuditMyTracking" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Free Website Tracking Audit Tool | GA4, Google Ads & Meta"
+    />
+    <meta
+      name="twitter:description"
+      content="Instantly check your GA4, Google Ads, Meta CAPI, GTM and Consent Mode v2 setup. Find missing conversions and fix tracking errors."
+    />
+    <meta
+      name="twitter:image"
+      content="https://auditmytracking.com/app-logo.svg"
+    />
+
+    <!-- Structured Data (JSON-LD) — Google কে জানায় এটা একটা free web tool -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "AuditMyTracking",
+        "url": "https://auditmytracking.com/",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Free website tracking audit tool that checks GA4, Google Ads, Meta CAPI, GTM and Consent Mode v2 setup, finds missing conversions and highlights tracking errors."
+      }
+    </script>
     <!-- Favicon: simplified mark stays sharp at tiny tab sizes -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <!-- Apple touch icon: full detailed icon for mobile home-screen bookmark -->
@@ -107,10 +167,10 @@
       <!-- View 1: Sign Up Form -->
       <div
         id="viewSignup"
-        class="w-full max-w-md bg-slate-900/90 p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden backdrop-blur-sm"
+        class="w-full max-w-md bg-slate-900/90 p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-2xl relative backdrop-blur-sm"
       >
         <div
-          class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-400 to-indigo-500"
+          class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-400 to-indigo-500 rounded-t-2xl"
         ></div>
         <h2 class="text-2xl font-bold text-white mb-2">Create Free Account</h2>
         <p class="text-sm text-slate-400 mb-6">
@@ -196,344 +256,73 @@
               <label class="text-xs font-semibold text-slate-400"
                 >Country Code</label
               >
-              <label class="text-xs font-semibold text-slate-400 mr-24"
+              <label
+                class="hidden sm:block text-xs font-semibold text-slate-400 mr-24"
                 >Phone Number</label
               >
             </div>
-            <div class="flex gap-2">
-              <select
-                id="suCountrySelect"
-                onchange="window.onCountryChanged('signup')"
-                class="w-48 bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
-              >
-                <option value="" disabled selected>Choose Country</option>
-                <option
-                  value="United States"
-                  data-code="+1"
-                  data-min="10"
-                  data-max="10"
+            <div class="flex flex-col sm:flex-row gap-2">
+              <!-- custom searchable country dropdown (signup) -->
+              <div class="relative w-full sm:w-48" id="suCountryWrap">
+                <button
+                  type="button"
+                  id="suCountryTrigger"
+                  onclick="window.toggleCountryDropdown('signup')"
+                  class="w-full flex items-center justify-between bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
                 >
-                  +1 (United States)
-                </option>
-                <option
-                  value="Afghanistan"
-                  data-code="+93"
-                  data-min="9"
-                  data-max="9"
+                  <span id="suCountryLabel" class="text-slate-400 truncate"
+                    >Choose Country</span
+                  >
+                  <svg
+                    class="w-4 h-4 text-slate-400 flex-shrink-0 ml-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                <!-- hidden field: নির্বাচিত country এর data রাখে -->
+                <input
+                  type="hidden"
+                  id="suCountrySelect"
+                  data-code=""
+                  data-min=""
+                  data-max=""
+                  value=""
+                />
+                <!-- dropdown panel — field এর সমান চওড়া (mobile এ বেরিয়ে যাবে না) -->
+                <div
+                  id="suCountryPanel"
+                  class="hidden absolute z-50 mt-1 w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
                 >
-                  +93 (Afghanistan)
-                </option>
-                <option
-                  value="Albania"
-                  data-code="+355"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +355 (Albania)
-                </option>
-                <option
-                  value="Algeria"
-                  data-code="+213"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +213 (Algeria)
-                </option>
-                <option
-                  value="Argentina"
-                  data-code="+54"
-                  data-min="10"
-                  data-max="11"
-                >
-                  +54 (Argentina)
-                </option>
-                <option
-                  value="Australia"
-                  data-code="+61"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +61 (Australia)
-                </option>
-                <option
-                  value="Austria"
-                  data-code="+43"
-                  data-min="10"
-                  data-max="11"
-                >
-                  +43 (Austria)
-                </option>
-                <option
-                  value="Bahrain"
-                  data-code="+973"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +973 (Bahrain)
-                </option>
-                <option
-                  value="Bangladesh"
-                  data-code="+880"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +880 (Bangladesh)
-                </option>
-                <option
-                  value="Belgium"
-                  data-code="+32"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +32 (Belgium)
-                </option>
-                <option
-                  value="Brazil"
-                  data-code="+55"
-                  data-min="10"
-                  data-max="11"
-                >
-                  +55 (Brazil)
-                </option>
-                <option
-                  value="Canada"
-                  data-code="+1"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +1 (Canada)
-                </option>
-                <option
-                  value="China"
-                  data-code="+86"
-                  data-min="11"
-                  data-max="11"
-                >
-                  +86 (China)
-                </option>
-                <option
-                  value="Denmark"
-                  data-code="+45"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +45 (Denmark)
-                </option>
-                <option
-                  value="Egypt"
-                  data-code="+20"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +20 (Egypt)
-                </option>
-                <option
-                  value="Finland"
-                  data-code="+358"
-                  data-min="9"
-                  data-max="10"
-                >
-                  +358 (Finland)
-                </option>
-                <option
-                  value="France"
-                  data-code="+33"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +33 (France)
-                </option>
-                <option
-                  value="Germany"
-                  data-code="+49"
-                  data-min="10"
-                  data-max="11"
-                >
-                  +49 (Germany)
-                </option>
-                <option
-                  value="Hong Kong"
-                  data-code="+852"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +852 (Hong Kong)
-                </option>
-                <option
-                  value="India"
-                  data-code="+91"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +91 (India)
-                </option>
-                <option
-                  value="Indonesia"
-                  data-code="+62"
-                  data-min="9"
-                  data-max="12"
-                >
-                  +62 (Indonesia)
-                </option>
-                <option
-                  value="Ireland"
-                  data-code="+353"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +353 (Ireland)
-                </option>
-                <option
-                  value="Italy"
-                  data-code="+39"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +39 (Italy)
-                </option>
-                <option
-                  value="Japan"
-                  data-code="+81"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +81 (Japan)
-                </option>
-                <option
-                  value="Kuwait"
-                  data-code="+965"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +965 (Kuwait)
-                </option>
-                <option
-                  value="Malaysia"
-                  data-code="+60"
-                  data-min="9"
-                  data-max="10"
-                >
-                  +60 (Malaysia)
-                </option>
-                <option
-                  value="Netherlands"
-                  data-code="+31"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +31 (Netherlands)
-                </option>
-                <option
-                  value="New Zealand"
-                  data-code="+64"
-                  data-min="9"
-                  data-max="10"
-                >
-                  +64 (New Zealand)
-                </option>
-                <option
-                  value="Norway"
-                  data-code="+47"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +47 (Norway)
-                </option>
-                <option value="Oman" data-code="+968" data-min="8" data-max="8">
-                  +968 (Oman)
-                </option>
-                <option
-                  value="Pakistan"
-                  data-code="+92"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +92 (Pakistan)
-                </option>
-                <option
-                  value="Qatar"
-                  data-code="+974"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +974 (Qatar)
-                </option>
-                <option
-                  value="Saudi Arabia"
-                  data-code="+966"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +966 (Saudi Arabia)
-                </option>
-                <option
-                  value="Singapore"
-                  data-code="+65"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +65 (Singapore)
-                </option>
-                <option
-                  value="South Africa"
-                  data-code="+27"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +27 (South Africa)
-                </option>
-                <option value="Spain" data-code="+34" data-min="9" data-max="9">
-                  +34 (Spain)
-                </option>
-                <option
-                  value="Sweden"
-                  data-code="+46"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +46 (Sweden)
-                </option>
-                <option
-                  value="Switzerland"
-                  data-code="+41"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +41 (Switzerland)
-                </option>
-                <option
-                  value="Turkey"
-                  data-code="+90"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +90 (Turkey)
-                </option>
-                <option
-                  value="United Arab Emirates"
-                  data-code="+971"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +971 (United Arab Emirates)
-                </option>
-                <option
-                  value="United Kingdom"
-                  data-code="+44"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +44 (United Kingdom)
-                </option>
-              </select>
+                  <div class="p-2 border-b border-slate-700/70">
+                    <input
+                      type="text"
+                      id="suCountrySearch"
+                      oninput="window.filterCountryList('signup')"
+                      placeholder="Search country or code..."
+                      class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    />
+                  </div>
+                  <div
+                    id="suCountryOptions"
+                    class="max-h-56 overflow-y-auto py-1"
+                  ></div>
+                </div>
+              </div>
 
               <input
                 id="suPhone"
                 type="tel"
                 oninput="window.validatePhoneLive('signup')"
                 placeholder="123456789"
-                class="flex-1 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono transition"
-                required
+                class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono transition"
               />
             </div>
             <p
@@ -624,20 +413,65 @@
             class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5"
             >WhatsApp Number</label
           >
-          <div class="flex gap-2">
-            <select
-              id="cpCountrySelect"
-              onchange="window.onCountryChanged('complete')"
-              class="w-48 bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
-            >
-              <option value="" disabled selected>Choose Country</option>
-            </select>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <!-- custom searchable country dropdown (complete profile) -->
+            <div class="relative w-full sm:w-48" id="cpCountryWrap">
+              <button
+                type="button"
+                id="cpCountryTrigger"
+                onclick="window.toggleCountryDropdown('complete')"
+                class="w-full flex items-center justify-between bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
+              >
+                <span id="cpCountryLabel" class="text-slate-400 truncate"
+                  >Choose Country</span
+                >
+                <svg
+                  class="w-4 h-4 text-slate-400 flex-shrink-0 ml-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <input
+                type="hidden"
+                id="cpCountrySelect"
+                data-code=""
+                data-min=""
+                data-max=""
+                value=""
+              />
+              <div
+                id="cpCountryPanel"
+                class="hidden absolute z-50 mt-1 w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
+              >
+                <div class="p-2 border-b border-slate-700/70">
+                  <input
+                    type="text"
+                    id="cpCountrySearch"
+                    oninput="window.filterCountryList('complete')"
+                    placeholder="Search country or code..."
+                    class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  />
+                </div>
+                <div
+                  id="cpCountryOptions"
+                  class="max-h-56 overflow-y-auto py-1"
+                ></div>
+              </div>
+            </div>
             <input
               id="cpPhone"
               type="tel"
               oninput="window.validatePhoneLive('complete')"
               placeholder="123456789"
-              class="flex-1 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono transition"
+              class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono transition"
             />
           </div>
           <p
@@ -804,12 +638,20 @@
             AI-Powered Tracking & Conversion Inspector
           </span>
 
-          <!-- Typewriter Section with 3-Color Gradient & Fixed Height -->
-          <div
-            class="h-[110px] sm:h-[125px] md:h-[135px] flex items-center justify-center mt-3 px-2"
+          <!-- স্থির H1 — SEO এর মূল topic signal (কখনো বদলায় না) -->
+          <h1
+            class="text-2xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight text-center max-w-3xl mx-auto mt-3 text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-cyan-300"
           >
-            <h1
-              class="text-2xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight text-center max-w-3xl"
+            Free Website Tracking Audit for GA4, Google Ads &amp; Meta
+          </h1>
+
+          <!-- animated ঘূর্ণায়মান লেখা (H1 নয় — শুধু দৃশ্যগত, SEO নিরাপদ) -->
+          <div
+            class="h-[44px] sm:h-[52px] flex items-center justify-center mt-3 px-2"
+            aria-hidden="true"
+          >
+            <p
+              class="text-lg sm:text-2xl md:text-3xl font-bold tracking-tight text-center max-w-3xl"
             >
               <span
                 id="typewriterText"
@@ -819,12 +661,12 @@
                 class="text-cyan-400 font-light cursor-blink inline-block ml-0.5"
                 >|</span
               >
-            </h1>
+            </p>
           </div>
 
           <p class="text-slate-400 mt-2 text-sm sm:text-base">
             Deep technical scan across Google Ads, GA4, Consent Mode v2, Meta
-            CAPI, GTM & Server Tagging.
+            CAPI, GTM &amp; Server Tagging.
           </p>
         </div>
 
@@ -1086,345 +928,71 @@
               <label class="text-xs font-semibold text-slate-400"
                 >Country Code</label
               >
-              <label class="text-xs font-semibold text-slate-400 mr-28"
+              <label
+                class="hidden sm:block text-xs font-semibold text-slate-400 mr-28"
                 >WhatsApp</label
               >
             </div>
-            <div class="flex gap-2">
-              <select
-                id="bmCountrySelect"
-                onchange="window.onCountryChanged('booking')"
-                class="w-48 bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
-                required
-              >
-                <option value="" disabled selected>Select Country</option>
-                <option
-                  value="United States"
-                  data-code="+1"
-                  data-min="10"
-                  data-max="10"
+            <div class="flex flex-col sm:flex-row gap-2">
+              <!-- custom searchable country dropdown (booking) -->
+              <div class="relative w-full sm:w-48" id="bmCountryWrap">
+                <button
+                  type="button"
+                  id="bmCountryTrigger"
+                  onclick="window.toggleCountryDropdown('booking')"
+                  class="w-full flex items-center justify-between bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
                 >
-                  +1 (United States)
-                </option>
-                <option
-                  value="Afghanistan"
-                  data-code="+93"
-                  data-min="9"
-                  data-max="9"
+                  <span id="bmCountryLabel" class="text-slate-400 truncate"
+                    >Choose Country</span
+                  >
+                  <svg
+                    class="w-4 h-4 text-slate-400 flex-shrink-0 ml-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                <input
+                  type="hidden"
+                  id="bmCountrySelect"
+                  data-code=""
+                  data-min=""
+                  data-max=""
+                  value=""
+                />
+                <div
+                  id="bmCountryPanel"
+                  class="hidden absolute z-50 mt-1 w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
                 >
-                  +93 (Afghanistan)
-                </option>
-                <option
-                  value="Albania"
-                  data-code="+355"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +355 (Albania)
-                </option>
-                <option
-                  value="Algeria"
-                  data-code="+213"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +213 (Algeria)
-                </option>
-                <option
-                  value="Argentina"
-                  data-code="+54"
-                  data-min="10"
-                  data-max="11"
-                >
-                  +54 (Argentina)
-                </option>
-                <option
-                  value="Australia"
-                  data-code="+61"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +61 (Australia)
-                </option>
-                <option
-                  value="Austria"
-                  data-code="+43"
-                  data-min="10"
-                  data-max="11"
-                >
-                  +43 (Austria)
-                </option>
-                <option
-                  value="Bahrain"
-                  data-code="+973"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +973 (Bahrain)
-                </option>
-                <option
-                  value="Bangladesh"
-                  data-code="+880"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +880 (Bangladesh)
-                </option>
-                <option
-                  value="Belgium"
-                  data-code="+32"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +32 (Belgium)
-                </option>
-                <option
-                  value="Brazil"
-                  data-code="+55"
-                  data-min="10"
-                  data-max="11"
-                >
-                  +55 (Brazil)
-                </option>
-                <option
-                  value="Canada"
-                  data-code="+1"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +1 (Canada)
-                </option>
-                <option
-                  value="China"
-                  data-code="+86"
-                  data-min="11"
-                  data-max="11"
-                >
-                  +86 (China)
-                </option>
-                <option
-                  value="Denmark"
-                  data-code="+45"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +45 (Denmark)
-                </option>
-                <option
-                  value="Egypt"
-                  data-code="+20"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +20 (Egypt)
-                </option>
-                <option
-                  value="Finland"
-                  data-code="+358"
-                  data-min="9"
-                  data-max="10"
-                >
-                  +358 (Finland)
-                </option>
-                <option
-                  value="France"
-                  data-code="+33"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +33 (France)
-                </option>
-                <option
-                  value="Germany"
-                  data-code="+49"
-                  data-min="10"
-                  data-max="11"
-                >
-                  +49 (Germany)
-                </option>
-                <option
-                  value="Hong Kong"
-                  data-code="+852"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +852 (Hong Kong)
-                </option>
-                <option
-                  value="India"
-                  data-code="+91"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +91 (India)
-                </option>
-                <option
-                  value="Indonesia"
-                  data-code="+62"
-                  data-min="9"
-                  data-max="12"
-                >
-                  +62 (Indonesia)
-                </option>
-                <option
-                  value="Ireland"
-                  data-code="+353"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +353 (Ireland)
-                </option>
-                <option
-                  value="Italy"
-                  data-code="+39"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +39 (Italy)
-                </option>
-                <option
-                  value="Japan"
-                  data-code="+81"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +81 (Japan)
-                </option>
-                <option
-                  value="Kuwait"
-                  data-code="+965"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +965 (Kuwait)
-                </option>
-                <option
-                  value="Malaysia"
-                  data-code="+60"
-                  data-min="9"
-                  data-max="10"
-                >
-                  +60 (Malaysia)
-                </option>
-                <option
-                  value="Netherlands"
-                  data-code="+31"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +31 (Netherlands)
-                </option>
-                <option
-                  value="New Zealand"
-                  data-code="+64"
-                  data-min="9"
-                  data-max="10"
-                >
-                  +64 (New Zealand)
-                </option>
-                <option
-                  value="Norway"
-                  data-code="+47"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +47 (Norway)
-                </option>
-                <option value="Oman" data-code="+968" data-min="8" data-max="8">
-                  +968 (Oman)
-                </option>
-                <option
-                  value="Pakistan"
-                  data-code="+92"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +92 (Pakistan)
-                </option>
-                <option
-                  value="Qatar"
-                  data-code="+974"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +974 (Qatar)
-                </option>
-                <option
-                  value="Saudi Arabia"
-                  data-code="+966"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +966 (Saudi Arabia)
-                </option>
-                <option
-                  value="Singapore"
-                  data-code="+65"
-                  data-min="8"
-                  data-max="8"
-                >
-                  +65 (Singapore)
-                </option>
-                <option
-                  value="South Africa"
-                  data-code="+27"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +27 (South Africa)
-                </option>
-                <option value="Spain" data-code="+34" data-min="9" data-max="9">
-                  +34 (Spain)
-                </option>
-                <option
-                  value="Sweden"
-                  data-code="+46"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +46 (Sweden)
-                </option>
-                <option
-                  value="Switzerland"
-                  data-code="+41"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +41 (Switzerland)
-                </option>
-                <option
-                  value="Turkey"
-                  data-code="+90"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +90 (Turkey)
-                </option>
-                <option
-                  value="United Arab Emirates"
-                  data-code="+971"
-                  data-min="9"
-                  data-max="9"
-                >
-                  +971 (United Arab Emirates)
-                </option>
-                <option
-                  value="United Kingdom"
-                  data-code="+44"
-                  data-min="10"
-                  data-max="10"
-                >
-                  +44 (United Kingdom)
-                </option>
-              </select>
+                  <div class="p-2 border-b border-slate-700/70">
+                    <input
+                      type="text"
+                      id="bmCountrySearch"
+                      oninput="window.filterCountryList('booking')"
+                      placeholder="Search country or code..."
+                      class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    />
+                  </div>
+                  <div
+                    id="bmCountryOptions"
+                    class="max-h-56 overflow-y-auto py-1"
+                  ></div>
+                </div>
+              </div>
 
               <input
                 id="bmWhatsApp"
                 type="tel"
                 oninput="window.validatePhoneLive('booking')"
                 placeholder=""
-                class="flex-1 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono"
-                required
+                class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono"
               />
             </div>
             <p

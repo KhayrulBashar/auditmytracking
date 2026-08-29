@@ -129,6 +129,11 @@ window.openBookingModal = function (serviceName) {
 
   if (serviceInput) serviceInput.value = serviceName;
 
+  // booking country dropdown reset (custom searchable — signup এর মতো)
+  if (window.resetCountryDropdown) {
+    window.resetCountryDropdown("booking");
+  }
+
   if (modalTitle) {
     if (serviceName === "Book Tracking Setup") {
       modalTitle.innerText = "Book Expert Tracking Setup";
@@ -190,64 +195,47 @@ window.openBookingModal = function (serviceName) {
   if (emailInput) emailInput.value = savedEmail;
   if (nameInput) nameInput.value = savedName;
 
-  const countrySelect = document.getElementById("bmCountrySelect");
   const phoneInput = document.getElementById("bmWhatsApp");
 
   // country ম্যাচ: আসল phone নাম্বারের dial code-কে অগ্রাধিকার দাও।
   // কারণ Google OAuth এ signup_country ভুল হতে পারে ("United States"), কিন্তু
   // ইউজার নিজে যে WhatsApp নাম্বার দিয়েছে (+880) সেটাই সঠিক country নির্দেশ করে।
-  let countryMatched = false;
+  let matchedCountry = null;
 
   // ধাপ ১ (অগ্রাধিকার): সেভ করা phone এর dial code (+880) দিয়ে ম্যাচ
-  if (countrySelect && savedPhone) {
+  // সবচেয়ে লম্বা code আগে মেলাও (+1 এর আগে +1876 যাতে ভুল না হয়)
+  if (savedPhone && typeof COUNTRY_LIST !== "undefined") {
     const phoneDigits = savedPhone.replace(/[^0-9+]/g, "");
-    // সবচেয়ে লম্বা data-code আগে মেলাও (+1 এর আগে +1876 যাতে ভুল না হয়)
-    let bestMatchIndex = -1;
-    let bestCodeLen = 0;
-    for (let i = 0; i < countrySelect.options.length; i++) {
-      const dc = countrySelect.options[i].getAttribute("data-code") || "";
-      if (dc && phoneDigits.startsWith(dc) && dc.length > bestCodeLen) {
-        bestMatchIndex = i;
-        bestCodeLen = dc.length;
+    let bestLen = 0;
+    COUNTRY_LIST.forEach((c) => {
+      if (c.c && phoneDigits.startsWith(c.c) && c.c.length > bestLen) {
+        matchedCountry = c;
+        bestLen = c.c.length;
       }
-    }
-    if (bestMatchIndex >= 0) {
-      countrySelect.selectedIndex = bestMatchIndex;
-      countryMatched = true;
-    }
+    });
   }
 
   // ধাপ ২ (fallback): phone না থাকলে, সেভ করা country name দিয়ে ম্যাচ
-  if (countrySelect && !countryMatched && savedCountry) {
-    for (let i = 0; i < countrySelect.options.length; i++) {
-      if (countrySelect.options[i].value === savedCountry) {
-        countrySelect.selectedIndex = i;
-        countryMatched = true;
-        break;
-      }
-    }
+  if (!matchedCountry && savedCountry && typeof COUNTRY_LIST !== "undefined") {
+    matchedCountry = COUNTRY_LIST.find((c) => c.n === savedCountry) || null;
   }
 
-  if (countrySelect && !countryMatched) countrySelect.selectedIndex = 0;
+  // ম্যাচ পেলে custom dropdown এ সিলেক্ট করাও (label + hidden input সেট হবে)
+  if (matchedCountry) {
+    window.selectCountry("booking", matchedCountry.n, matchedCountry.c, matchedCountry.mn, matchedCountry.mx);
+  }
 
-  // phone: সেভ থাকলে বসাও; নাহলে country অনুযায়ী prefix বা খালি
+  // phone: সেভ থাকলে বসাও; নাহলে selectCountry prefix বসিয়ে দিয়েছে
   if (phoneInput) {
     if (savedPhone) {
       // WhatsApp link আকারে সেভ থাকতে পারে — শুধু ডিজিট/প্লাস বের করে দেখাও
       const digits = savedPhone.replace(/[^0-9+]/g, "");
       phoneInput.value = digits.startsWith("+") ? digits : (digits ? "+" + digits : "");
-    } else {
+    } else if (!matchedCountry) {
       phoneInput.value = "";
     }
   }
 
-  // country সিলেক্ট থাকলে prefix ঠিক রাখতে onCountryChanged ডাকো
-  // (কিন্তু সেভ করা phone থাকলে সেটা মুছবে না)
-  if (countryMatched && !savedPhone) {
-    window.onCountryChanged("booking");
-  } else if (!countryMatched) {
-    window.onCountryChanged("booking");
-  }
   if (modal) modal.classList.remove("hidden");
 };
 

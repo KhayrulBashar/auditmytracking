@@ -43,68 +43,193 @@ window.requireSessionForDashboard = async function () {
   }
 };
 
+// custom dropdown reset (signup view আবার খুললে "Choose Country" তে ফেরাও)
+window.resetCountryDropdown = function (formType) {
+  const prefix = formType === "signup" ? "su" : formType === "complete" ? "cp" : "bm";
+  const hidden = document.getElementById(prefix + "CountrySelect");
+  const label = document.getElementById(prefix + "CountryLabel");
+  const panel = document.getElementById(prefix + "CountryPanel");
+  if (hidden && hidden.tagName === "INPUT") {
+    hidden.value = "";
+    hidden.setAttribute("data-code", "");
+    hidden.setAttribute("data-min", "");
+    hidden.setAttribute("data-max", "");
+  }
+  if (label) {
+    label.innerText = "Choose Country";
+    label.classList.add("text-slate-400");
+    label.classList.remove("text-white");
+  }
+  if (panel) panel.classList.add("hidden");
+};
+
+// ── custom searchable country dropdown ─────────────────────────────────────
+// signup এ native <select> এর বদলে custom panel ব্যবহার হয় (search সহ)।
+// booking/complete এখনো native select — তাই helper দুই structure ই পড়ে।
+
+// একটা form এর নির্বাচিত country data পড়ে: { name, code, min, max }
+// signup: hidden input (data-* attribute) থেকে; booking/complete: select option থেকে
+window.getSelectedCountry = function (formType) {
+  // তিন form ই এখন custom dropdown — hidden input এ data-* attribute রাখে
+  const prefix = formType === "signup" ? "su" : formType === "complete" ? "cp" : "bm";
+  const h = document.getElementById(prefix + "CountrySelect");
+  if (!h || !h.value) return null;
+  return {
+    name: h.value,
+    code: h.getAttribute("data-code") || "",
+    min: parseInt(h.getAttribute("data-min") || "6"),
+    max: parseInt(h.getAttribute("data-max") || "14"),
+  };
+};
+
+// dropdown panel খোলা/বন্ধ (আপাতত signup এই ব্যবহার হয়)
+window.toggleCountryDropdown = function (formType) {
+  const prefix = formType === "signup" ? "su" : formType === "complete" ? "cp" : "bm";
+  const panel = document.getElementById(prefix + "CountryPanel");
+  const search = document.getElementById(prefix + "CountrySearch");
+  if (!panel) return;
+  const isOpen = !panel.classList.contains("hidden");
+  if (isOpen) {
+    panel.classList.add("hidden");
+    return;
+  }
+  // list এখনো render না হলে render করো
+  window.renderCountryList(formType);
+  panel.classList.remove("hidden");
+  if (search) {
+    search.value = "";
+    window.filterCountryList(formType);
+    setTimeout(() => search.focus(), 30);
+  }
+};
+
+// COUNTRY_LIST থেকে option গুলো render করে
+window.renderCountryList = function (formType, filter) {
+  const prefix = formType === "signup" ? "su" : formType === "complete" ? "cp" : "bm";
+  const box = document.getElementById(prefix + "CountryOptions");
+  if (!box || typeof COUNTRY_LIST === "undefined") return;
+
+  const q = (filter || "").trim().toLowerCase();
+  const items = COUNTRY_LIST.filter((c) => {
+    if (!q) return true;
+    return c.n.toLowerCase().includes(q) || c.c.toLowerCase().includes(q);
+  });
+
+  if (items.length === 0) {
+    box.innerHTML = '<div class="px-3 py-3 text-xs text-slate-500 text-center">No country found</div>';
+    return;
+  }
+
+  box.innerHTML = items
+    .map(
+      (c) =>
+        `<button type="button" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 flex items-center justify-between gap-2"
+          onclick="window.selectCountry('${formType}', ${JSON.stringify(c.n).replace(/"/g, "&quot;")}, '${c.c}', ${c.mn}, ${c.mx})">
+          <span class="truncate">${c.n}</span>
+          <span class="text-slate-400 flex-shrink-0">${c.c}</span>
+        </button>`
+    )
+    .join("");
+};
+
+// search box এ টাইপ করলে filter
+window.filterCountryList = function (formType) {
+  const prefix = formType === "signup" ? "su" : formType === "complete" ? "cp" : "bm";
+  const search = document.getElementById(prefix + "CountrySearch");
+  window.renderCountryList(formType, search ? search.value : "");
+};
+
+// একটা country বাছাই করলে
+window.selectCountry = function (formType, name, code, min, max) {
+  const prefix = formType === "signup" ? "su" : formType === "complete" ? "cp" : "bm";
+  const hidden = document.getElementById(prefix + "CountrySelect");
+  const label = document.getElementById(prefix + "CountryLabel");
+  const panel = document.getElementById(prefix + "CountryPanel");
+
+  if (hidden) {
+    hidden.value = name;
+    hidden.setAttribute("data-code", code);
+    hidden.setAttribute("data-min", String(min));
+    hidden.setAttribute("data-max", String(max));
+  }
+  if (label) {
+    label.innerText = `${code} (${name})`;
+    label.classList.remove("text-slate-400");
+    label.classList.add("text-white");
+  }
+  if (panel) panel.classList.add("hidden");
+
+  window.onCountryChanged(formType);
+};
+
+// বাইরে ক্লিক করলে খোলা dropdown বন্ধ হবে
+document.addEventListener("click", function (e) {
+  ["su", "cp", "bm"].forEach((p) => {
+    const wrap = document.getElementById(p + "CountryWrap");
+    const panel = document.getElementById(p + "CountryPanel");
+    if (wrap && panel && !panel.classList.contains("hidden") && !wrap.contains(e.target)) {
+      panel.classList.add("hidden");
+    }
+  });
+});
+
 window.onCountryChanged = function (formType) {
   // তিন context: signup (su), booking (bm), complete profile (cp)
-  let selectId, phoneId;
+  let phoneId;
   if (formType === "signup") {
-    selectId = "suCountrySelect"; phoneId = "suPhone";
+    phoneId = "suPhone";
   } else if (formType === "complete") {
-    selectId = "cpCountrySelect"; phoneId = "cpPhone";
+    phoneId = "cpPhone";
   } else {
-    selectId = "bmCountrySelect"; phoneId = "bmWhatsApp";
+    phoneId = "bmWhatsApp";
   }
-  const selectEl = document.getElementById(selectId);
   const phoneInput = document.getElementById(phoneId);
-  if (!selectEl || !phoneInput) return;
+  if (!phoneInput) return;
 
-  const selectedOpt = selectEl.options[selectEl.selectedIndex];
+  const country = window.getSelectedCountry(formType);
 
-  // "Choose Country" (খালি value) সিলেক্ট থাকলে → placeholder দেখাও, ফিল্ড খালি
-  if (!selectedOpt || !selectedOpt.value) {
+  // country না বাছলে → placeholder দেখাও, ফিল্ড খালি
+  if (!country) {
     phoneInput.value = "";
     phoneInput.placeholder = "123456789";
     return;
   }
 
   // country বাছা হলে → placeholder সরিয়ে country code বসাও, cursor code এর পরে
-  const code = selectedOpt.getAttribute("data-code") || "";
+  const code = country.code || "";
   phoneInput.placeholder = "";
   phoneInput.value = code ? code : "";
   phoneInput.focus();
-  // cursor কে code এর পরে নিয়ে যাও যাতে ইউজার সরাসরি নাম্বার টাইপ করতে পারে
   const len = phoneInput.value.length;
   try { phoneInput.setSelectionRange(len, len); } catch (e) {}
 
-  if (isSignup) {
-    window.validatePhoneLive("signup");
-  }
+  window.validatePhoneLive(formType);
 };
 
 window.validatePhoneLive = function (formType) {
   // তিন context: signup (su), booking (bm), complete profile (cp)
-  let selectId, phoneId, warnId;
+  let phoneId, warnId;
   if (formType === "signup") {
-    selectId = "suCountrySelect"; phoneId = "suPhone"; warnId = "phoneWarning";
+    phoneId = "suPhone"; warnId = "phoneWarning";
   } else if (formType === "complete") {
-    selectId = "cpCountrySelect"; phoneId = "cpPhone"; warnId = "cpPhoneWarning";
+    phoneId = "cpPhone"; warnId = "cpPhoneWarning";
   } else {
-    selectId = "bmCountrySelect"; phoneId = "bmWhatsApp"; warnId = "bmPhoneWarning";
+    phoneId = "bmWhatsApp"; warnId = "bmPhoneWarning";
   }
-  const selectEl = document.getElementById(selectId);
   const phoneInput = document.getElementById(phoneId);
   const warningEl = document.getElementById(warnId);
-  if (!selectEl || !phoneInput) return true;
+  if (!phoneInput) return true;
 
-  const selectedOpt = selectEl.options[selectEl.selectedIndex];
-  if (!selectedOpt || !selectedOpt.value) {
+  const country = window.getSelectedCountry(formType);
+  if (!country) {
     // country না বাছলে ফোন ভ্যালিডেশন এখানে আটকাবে না (country চেক আলাদা)
     return true;
   }
 
-  const countryName = selectedOpt.value;
-  const prefix = selectedOpt.getAttribute("data-code") || "+1";
-  const minDigits = parseInt(selectedOpt.getAttribute("data-min") || "8");
-  const maxDigits = parseInt(selectedOpt.getAttribute("data-max") || "12");
+  const countryName = country.name;
+  const prefix = country.code || "+1";
+  const minDigits = country.min;
+  const maxDigits = country.max;
 
   let val = phoneInput.value;
 
@@ -249,17 +374,13 @@ window.showView = function (view) {
 
   if (view === "signup") {
     document.getElementById("viewSignup").classList.remove("hidden");
+    window.resetCountryDropdown("signup");
     window.onCountryChanged("signup");
     window.updateNavHeader("guest");
   } else if (view === "completeProfile") {
     document.getElementById("viewCompleteProfile").classList.remove("hidden");
     window.updateNavHeader("guest");
-    // signup এর country dropdown থেকে option গুলো copy করো (একবারই)
-    const srcSelect = document.getElementById("suCountrySelect");
-    const cpSelect = document.getElementById("cpCountrySelect");
-    if (srcSelect && cpSelect && cpSelect.options.length <= 1) {
-      cpSelect.innerHTML = srcSelect.innerHTML;
-    }
+    window.resetCountryDropdown("complete");
     window.onCountryChanged("complete");
   } else if (view === "login") {
     document.getElementById("viewLogin").classList.remove("hidden");
@@ -388,11 +509,9 @@ window.handleSignup = async function () {
   const isEmailValid = window.validateEmailLive("suEmail", "emailWarning");
 
   // country বাছাই বাধ্যতামূলক (placeholder "Choose Country" থাকলে আটকাবে)
-  const selectEl = document.getElementById("suCountrySelect");
-  const selectedOpt = selectEl ? selectEl.options[selectEl.selectedIndex] : null;
-  const countryChosen = selectedOpt && selectedOpt.value;
+  const chosenCountry = window.getSelectedCountry("signup");
 
-  if (!countryChosen) {
+  if (!chosenCountry) {
     const warn = document.getElementById("phoneWarning");
     if (warn) {
       warn.innerText = "Please choose your country.";
@@ -404,7 +523,7 @@ window.handleSignup = async function () {
   const isPhoneValid = window.validatePhoneLive("signup");
   if (!isNameValid || !isEmailValid || !isPhoneValid) return;
 
-  const countryName = selectedOpt.value;
+  const countryName = chosenCountry.name;
   const full_name = document.getElementById("suFullName").value.trim();
   const email = document.getElementById("suEmail").value.trim().toLowerCase();
   const fullPhone = document.getElementById("suPhone").value.trim();
