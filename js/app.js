@@ -128,35 +128,34 @@ document.addEventListener("DOMContentLoaded", async function () {
   const email = (user.email || "").trim().toLowerCase();
   const fullName = user.user_metadata?.full_name || user.user_metadata?.name || email.split("@")[0] || "User";
   const phone = user.user_metadata?.phone || "";
-  const country = user.user_metadata?.country || "United States";
+  const country = user.user_metadata?.country || "";
 
-  // Google OAuth ইউজারের লিড একবারই Sheet এ পাঠানো হয় (ডুপ্লিকেট রোধ)
-  const googleSignupSyncedKey = `google_synced_${email}`;
-  if (!localStorage.getItem(googleSignupSyncedKey)) {
-    try {
-      await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          form_name: "Sign_Up",
-          full_name: fullName,
-          email: email,
-          country: country,
-          phone: phone || "Google OAuth",
-          remarks: "Lead"
-        }),
-      });
-      localStorage.setItem(googleSignupSyncedKey, "true");
-    } catch (err) {
-      console.error("Google user sheet sync error:", err);
-    }
+  // এই Google ইউজার কি আগে profile সম্পূর্ণ করেছে? (phone আছে কিনা)
+  const alreadySynced = localStorage.getItem(`google_synced_${email}`) === "true";
+  const hasCompleteProfile = alreadySynced || (phone && phone !== "Google OAuth");
+
+  if (!hasCompleteProfile) {
+    // ── নতুন Google ইউজার — phone/country নেই ──────────────────────────
+    // Sheet এ এখনো পাঠাব না। আগে "Complete Profile" screen দেখাই যেখানে
+    // ইউজার phone + country দেবে, তারপর সম্পূর্ণ ডেটা Sheet এ যাবে।
+    localStorage.setItem("verified_user_email", email);
+    window.showView("completeProfile");
+
+    // name + email auto-fill (email locked)
+    setTimeout(() => {
+      const cpName = document.getElementById("cpName");
+      const cpEmail = document.getElementById("cpEmail");
+      if (cpName) cpName.value = fullName;
+      if (cpEmail) cpEmail.value = email;
+    }, 100);
+    return;
   }
 
+  // ── profile আগে সম্পূর্ণ — সরাসরি dashboard ─────────────────────────
   // auto-fill ও returning-login UI-র জন্য hint সেভ (dashboard access নয়)
   localStorage.setItem("verified_user_email", email);
   localStorage.setItem("signup_fullName", fullName);
-  localStorage.setItem("signup_country", country);
+  if (country) localStorage.setItem("signup_country", country);
   if (phone) localStorage.setItem("signup_phone", phone);
 
   window.showView("dashboard");

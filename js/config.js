@@ -12,6 +12,10 @@ const GTM_CONTAINER_ID = "GTM-PRN6TH9J";
 const AUDIT_ENDPOINT =
   "https://flpmaegkhkxxaitlgglv.supabase.co/functions/v1/audit-scan";
 
+// Supabase Edge Function — email আগে থেকে রেজিস্টার্ড কিনা যাচাই (duplicate signup রোধ)
+const CHECK_EMAIL_ENDPOINT =
+  "https://flpmaegkhkxxaitlgglv.supabase.co/functions/v1/check-email";
+
 // Supabase Publishable Key (নতুন key সিস্টেম — ব্রাউজারে ব্যবহার নিরাপদ)
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_wWGc69H8LTBhNjDg77ANIw_A0WWdTvB";

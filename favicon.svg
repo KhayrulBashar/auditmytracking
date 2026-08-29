@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+  <defs>
+    <linearGradient id="fvGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="fvBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="50%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+    <linearGradient id="fvLine" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded base -->
+  <rect width="128" height="128" rx="28" fill="url(#fvGrad)" stroke="url(#fvBorder)" stroke-width="4" />
+
+  <!-- Bold upward line only (readable at 16px) -->
+  <path d="M28 84 L54 56 L74 70 L100 34" stroke="url(#fvLine)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Pulse beacon -->
+  <circle cx="100" cy="34" r="9" fill="#10B981" />
+  <circle cx="100" cy="34" r="4" fill="#FFFFFF" />
+</svg>

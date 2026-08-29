@@ -1,79 +1,67 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 420" width="100%" height="100%" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 400" width="100%" height="100%" fill="none">
   <defs>
-    <!-- Background Outer Glow -->
     <linearGradient id="appBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#1E1B4B" />
       <stop offset="50%" stop-color="#0F172A" />
       <stop offset="100%" stop-color="#020617" />
     </linearGradient>
 
-    <!-- Border Gradient -->
     <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#6366F1" />
       <stop offset="50%" stop-color="#38BDF8" />
       <stop offset="100%" stop-color="#10B981" />
     </linearGradient>
 
-    <!-- Signal Gradient -->
     <linearGradient id="signalGrad" x1="0%" y1="100%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#10B981" />
       <stop offset="100%" stop-color="#38BDF8" />
     </linearGradient>
 
-    <!-- Shadow / Glow Filter -->
     <filter id="appGlow" x="-20%" y="-20%" width="140%" height="140%">
       <feGaussianBlur stdDeviation="8" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
 
-  <!-- 1. APP ICON TILE (Squircle / Rounded Square) -->
-  <g transform="translate(100, 20)">
+  <!-- 1. APP ICON TILE (centered) -->
+  <g transform="translate(180, 20)">
     <!-- Ambient Shadow -->
-    <rect x="0" y="0" width="200" height="200" rx="46" fill="url(#borderGrad)" opacity="0.25" filter="url(#appGlow)"/>
+    <rect x="0" y="0" width="200" height="200" rx="46" fill="url(#borderGrad)" opacity="0.22" filter="url(#appGlow)"/>
 
     <!-- Squircle Body -->
     <rect x="0" y="0" width="200" height="200" rx="46" fill="url(#appBgGrad)" stroke="url(#borderGrad)" stroke-width="3"/>
 
-    <!-- Radar / Scanning Ring -->
-    <circle cx="100" cy="90" r="55" stroke="#334155" stroke-width="2" stroke-dasharray="4 4" />
-    <circle cx="100" cy="90" r="32" stroke="#1E293B" stroke-width="1.5" />
+    <!-- Radar / Scanning Rings -->
+    <circle cx="100" cy="100" r="60" stroke="#334155" stroke-width="2" stroke-dasharray="4 5" />
+    <circle cx="100" cy="100" r="34" stroke="#1E293B" stroke-width="1.5" />
 
-    <!-- Analytics Metrics Columns -->
-    <rect x="68" y="92" width="10" height="32" rx="4" fill="#475569" />
-    <rect x="88" y="72" width="10" height="52" rx="4" fill="#6366F1" />
-    <rect x="108" y="58" width="10" height="66" rx="4" fill="#818CF8" />
-    <rect x="128" y="44" width="10" height="80" rx="4" fill="#38BDF8" />
+    <!-- Analytics Columns -->
+    <rect x="58" y="104" width="12" height="40" rx="5" fill="#475569" />
+    <rect x="80" y="82" width="12" height="62" rx="5" fill="#6366F1" />
+    <rect x="102" y="66" width="12" height="78" rx="5" fill="#818CF8" />
+    <rect x="124" y="50" width="12" height="94" rx="5" fill="#38BDF8" />
 
     <!-- Tracking Path Vector -->
-    <path d="M58 105 L88 78 L110 88 L142 48" stroke="url(#signalGrad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M48 118 L86 90 L110 102 L142 56" stroke="url(#signalGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
 
     <!-- Live Event Pulse Beacon -->
-    <circle cx="142" cy="48" r="7" fill="#10B981" filter="url(#appGlow)"/>
-    <circle cx="142" cy="48" r="3.5" fill="#FFFFFF"/>
-
-    <!-- AMT Monogram Inside App Badge -->
-    <rect x="65" y="148" width="70" height="24" rx="7" fill="#0F172A" stroke="#334155" stroke-width="1.5"/>
-    <text x="100" y="165" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="900" fill="#38BDF8" letter-spacing="4" text-anchor="middle">
-      AMT
-    </text>
+    <circle cx="142" cy="56" r="8" fill="#10B981" filter="url(#appGlow)"/>
+    <circle cx="142" cy="56" r="3.5" fill="#FFFFFF"/>
   </g>
 
-  <!-- 2. BRAND TYPOGRAPHY (Below Icon) -->
-  <g transform="translate(200, 275)" text-anchor="middle">
+  <!-- 2. BRAND TYPOGRAPHY (centered, fits fully) -->
+  <g transform="translate(280, 285)" text-anchor="middle">
     <!-- Main Full Name -->
-    <text font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="900" letter-spacing="-0.5">
-      <tspan fill="#FFFFFF">Audit</tspan>
-      <tspan fill="#6366F1">My</tspan>
-      <tspan fill="#38BDF8">Tracking</tspan>
+    <text font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="38" font-weight="900" letter-spacing="-1">
+      <tspan fill="#FFFFFF">Audit</tspan><tspan fill="#6366F1">My</tspan><tspan fill="#38BDF8">Tracking</tspan>
     </text>
 
-    <!-- Subtitle / Platform Category -->
-    <text y="32" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="800" fill="#94A3B8" letter-spacing="4">
-      ENTERPRISE TRACKING SUITE
+    <!-- Subtitle (honest, accurate) -->
+    <text y="32" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="800" fill="#94A3B8" letter-spacing="4.5">
+      AI TRACKING &amp; CONVERSION AUDIT
     </text>
 
-    <!-- Futuristic Divider -->
-    <line x1="-120" y1="52" x2="120" y2="52" stroke="#334155" stroke-width="1.5" opacity="0.6"/>
+    <!-- Divider -->
+    <line x1="-150" y1="54" x2="150" y2="54" stroke="#334155" stroke-width="1.5" opacity="0.6"/>
   </g>
 </svg>

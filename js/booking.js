@@ -1,3 +1,47 @@
+// ── website URL যাচাই (audit box এর মতোই লজিক) ─────────────────────────────
+// ইউজার যেভাবেই দিক (domain / www / http / https) স্বাভাবিক করে নেয়,
+// তারপর বৈধ domain ফরম্যাট (অন্তত একটা dot + TLD) আছে কিনা দেখে।
+// return: { valid: bool, normalized: "https://..." }
+window.normalizeAndCheckUrl = function (raw) {
+  let url = (raw || "").replace(/\s+/g, "");
+  if (!url) return { valid: false, normalized: "" };
+  if (!/^https?:\/\//i.test(url)) {
+    url = "https://" + url.replace(/^\/+/, "");
+  }
+  let valid = false;
+  try {
+    const u = new URL(url);
+    valid =
+      /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(u.hostname) &&
+      /\.[a-z]{2,}$/i.test(u.hostname);
+  } catch (e) {
+    valid = false;
+  }
+  return { valid: valid, normalized: url };
+};
+
+// live warning — booking website field এ টাইপ করার সময় চলে
+window.validateSiteUrlLive = function () {
+  const input = document.getElementById("bmSiteUrl");
+  const warning = document.getElementById("bmSiteUrlWarning");
+  if (!input || !warning) return true;
+
+  const raw = input.value.trim();
+  // খালি থাকলে warning দেখাব না (required নয়, submit এ ধরা হবে দরকারে)
+  if (!raw) {
+    warning.classList.add("hidden");
+    return false;
+  }
+  const check = window.normalizeAndCheckUrl(raw);
+  if (!check.valid) {
+    warning.innerText = "Please enter a valid website address (e.g. example.com).";
+    warning.classList.remove("hidden");
+    return false;
+  }
+  warning.classList.add("hidden");
+  return true;
+};
+
 const goalPlatformMap = {
   "Ecommerce": [
     "Shopify", "WooCommerce", "Magento / Adobe Commerce", "BigCommerce",
@@ -120,8 +164,13 @@ window.openBookingModal = function (serviceName) {
   }
 
   if (siteUrlInput) {
-    siteUrlInput.value = (serviceName === "Fix Tracking Issues" && window.currentAuditedUrl) ? window.currentAuditedUrl : "";
-    siteUrlInput.placeholder = "https://yourwebsite.com";
+    // scan করা হয়ে থাকলে যে service ই হোক আগের audited URL auto-fill হবে
+    // (ইউজার চাইলে edit করতে পারবে — field খোলা/editable)
+    siteUrlInput.value = window.currentAuditedUrl ? window.currentAuditedUrl : "";
+    siteUrlInput.placeholder = "Enter your website address";
+    // auto-fill এর পর পুরনো warning থাকলে মুছে দাও
+    const siteWarn = document.getElementById("bmSiteUrlWarning");
+    if (siteWarn) siteWarn.classList.add("hidden");
   }
 
   if (goalSelect) goalSelect.selectedIndex = 0;
@@ -210,7 +259,7 @@ window.closeBookingModal = function () {
 window.handleBookingSubmit = async function () {
   const isEmailValid = window.validateEmailLive("bmEmail", "bmEmailWarning");
   if (!isEmailValid) {
-    window.showNotificationModal("warning", "Invalid Email", "Please enter a valid, active business email.");
+    window.showNotificationModal("warning", "Invalid Email", "Please enter a valid business email.");
     return;
   }
 
@@ -222,6 +271,18 @@ window.handleBookingSubmit = async function () {
     return;
   }
 
+  // website URL যাচাই — খালি থাকলে আটকাবে, ভুল ফরম্যাট হলে আটকাবে
+  const siteRaw = document.getElementById("bmSiteUrl").value.trim();
+  if (!siteRaw) {
+    window.showNotificationModal("warning", "Website Required", "Please enter your website address so our team can review it.");
+    return;
+  }
+  const siteCheck = window.normalizeAndCheckUrl(siteRaw);
+  if (!siteCheck.valid) {
+    window.showNotificationModal("warning", "Invalid Website", "That does not look like a valid website address. Please enter a correct link (e.g. example.com) and try again.");
+    return;
+  }
+
   const name = document.getElementById("bmName").value.trim();
   const email = document.getElementById("bmEmail").value.trim().toLowerCase();
   const fullWhatsApp = document.getElementById("bmWhatsApp").value.trim();
@@ -229,7 +290,7 @@ window.handleBookingSubmit = async function () {
   const countryName = selectEl && selectEl.selectedIndex > 0 ? selectEl.options[selectEl.selectedIndex].value : "Not Specified";
   const formattedWhatsApp = toWhatsAppLink(fullWhatsApp);
 
-  const siteUrl = document.getElementById("bmSiteUrl").value.trim();
+  const siteUrl = siteCheck.normalized;
   const goal = document.getElementById("bmGoal").value;
   const platform = document.getElementById("bmPlatform").value;
   const objective = document.getElementById("bmObjective").value.trim();

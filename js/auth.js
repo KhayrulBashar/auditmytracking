@@ -44,9 +44,17 @@ window.requireSessionForDashboard = async function () {
 };
 
 window.onCountryChanged = function (formType) {
-  const isSignup = formType === "signup";
-  const selectEl = document.getElementById(isSignup ? "suCountrySelect" : "bmCountrySelect");
-  const phoneInput = document.getElementById(isSignup ? "suPhone" : "bmWhatsApp");
+  // তিন context: signup (su), booking (bm), complete profile (cp)
+  let selectId, phoneId;
+  if (formType === "signup") {
+    selectId = "suCountrySelect"; phoneId = "suPhone";
+  } else if (formType === "complete") {
+    selectId = "cpCountrySelect"; phoneId = "cpPhone";
+  } else {
+    selectId = "bmCountrySelect"; phoneId = "bmWhatsApp";
+  }
+  const selectEl = document.getElementById(selectId);
+  const phoneInput = document.getElementById(phoneId);
   if (!selectEl || !phoneInput) return;
 
   const selectedOpt = selectEl.options[selectEl.selectedIndex];
@@ -73,10 +81,18 @@ window.onCountryChanged = function (formType) {
 };
 
 window.validatePhoneLive = function (formType) {
-  const isSignup = formType === "signup";
-  const selectEl = document.getElementById(isSignup ? "suCountrySelect" : "bmCountrySelect");
-  const phoneInput = document.getElementById(isSignup ? "suPhone" : "bmWhatsApp");
-  const warningEl = document.getElementById(isSignup ? "phoneWarning" : "bmPhoneWarning");
+  // তিন context: signup (su), booking (bm), complete profile (cp)
+  let selectId, phoneId, warnId;
+  if (formType === "signup") {
+    selectId = "suCountrySelect"; phoneId = "suPhone"; warnId = "phoneWarning";
+  } else if (formType === "complete") {
+    selectId = "cpCountrySelect"; phoneId = "cpPhone"; warnId = "cpPhoneWarning";
+  } else {
+    selectId = "bmCountrySelect"; phoneId = "bmWhatsApp"; warnId = "bmPhoneWarning";
+  }
+  const selectEl = document.getElementById(selectId);
+  const phoneInput = document.getElementById(phoneId);
+  const warningEl = document.getElementById(warnId);
   if (!selectEl || !phoneInput) return true;
 
   const selectedOpt = selectEl.options[selectEl.selectedIndex];
@@ -101,7 +117,7 @@ window.validatePhoneLive = function (formType) {
 
   if (warningEl) {
     if (!afterPrefix) {
-      warningEl.innerText = "Phone/WhatsApp number is required.";
+      warningEl.innerText = "Please enter your WhatsApp number.";
       warningEl.classList.remove("hidden");
       return false;
     }
@@ -223,7 +239,7 @@ window.handleGoogleSignIn = async function () {
 };
 
 window.showView = function (view) {
-  const views = ["viewSignup", "viewLogin", "viewDashboard"];
+  const views = ["viewSignup", "viewCompleteProfile", "viewLogin", "viewDashboard"];
   views.forEach((v) => {
     const el = document.getElementById(v);
     if (el) el.classList.add("hidden");
@@ -235,6 +251,16 @@ window.showView = function (view) {
     document.getElementById("viewSignup").classList.remove("hidden");
     window.onCountryChanged("signup");
     window.updateNavHeader("guest");
+  } else if (view === "completeProfile") {
+    document.getElementById("viewCompleteProfile").classList.remove("hidden");
+    window.updateNavHeader("guest");
+    // signup এর country dropdown থেকে option গুলো copy করো (একবারই)
+    const srcSelect = document.getElementById("suCountrySelect");
+    const cpSelect = document.getElementById("cpCountrySelect");
+    if (srcSelect && cpSelect && cpSelect.options.length <= 1) {
+      cpSelect.innerHTML = srcSelect.innerHTML;
+    }
+    window.onCountryChanged("complete");
   } else if (view === "login") {
     document.getElementById("viewLogin").classList.remove("hidden");
     // verified email থাকলে "returning" (Log In বাটন), নাহলে "guest" (Sign Up)
@@ -242,8 +268,10 @@ window.showView = function (view) {
 
     const loginGoogleArea = document.getElementById("loginGoogleArea");
     const loginEmailInput = document.getElementById("loginEmail");
+    const loginEmailLabel = document.getElementById("loginEmailLabel");
     const loginFormEmail = document.getElementById("loginFormEmail");
     const loginFormOtp = document.getElementById("loginFormOtp");
+    const loginTitle = document.getElementById("loginTitle");
     const loginSubtitle = document.getElementById("loginSubtitle");
     const loginSignupPrompt = document.getElementById("loginSignupPrompt");
 
@@ -251,20 +279,37 @@ window.showView = function (view) {
     if (verifiedSavedEmail) {
       if (loginGoogleArea) loginGoogleArea.classList.add("hidden");
       if (loginSignupPrompt) loginSignupPrompt.classList.add("hidden");
-      if (loginEmailInput) loginEmailInput.value = verifiedSavedEmail;
+      // email storage থেকে নেওয়া হলো — ইউজার logout করে এসেছে, তাই edit করার
+      // দরকার নেই। field locked রাখা হলো (readonly + বদলানো যাবে না)।
+      if (loginEmailInput) {
+        loginEmailInput.value = verifiedSavedEmail;
+        loginEmailInput.setAttribute("readonly", "readonly");
+        loginEmailInput.classList.add("cursor-not-allowed", "opacity-90");
+      }
+      if (loginTitle) loginTitle.innerText = "Welcome Back";
+      if (loginSubtitle) {
+        loginSubtitle.innerText = "You're all set. Just confirm to securely access your workspace.";
+      }
+      if (loginEmailLabel) loginEmailLabel.innerText = "Your Registered Email";
     } else {
       if (loginGoogleArea) loginGoogleArea.classList.remove("hidden");
       if (loginSignupPrompt) loginSignupPrompt.classList.remove("hidden");
-      if (loginEmailInput && !window.tempAuthData) loginEmailInput.value = "";
+      // fresh visitor — email টাইপ করতে হবে, তাই field খোলা রাখো
+      if (loginEmailInput) {
+        loginEmailInput.removeAttribute("readonly");
+        loginEmailInput.classList.remove("cursor-not-allowed", "opacity-90");
+        if (!window.tempAuthData) loginEmailInput.value = "";
+      }
+      if (loginTitle) loginTitle.innerText = "Welcome Back";
+      if (loginSubtitle) {
+        loginSubtitle.innerText = "Enter your registered business email to access your workspace.";
+      }
+      if (loginEmailLabel) loginEmailLabel.innerText = "Registered Work Email";
     }
 
     if (loginFormEmail && loginFormOtp) {
       loginFormEmail.classList.remove("hidden");
       loginFormOtp.classList.add("hidden");
-    }
-
-    if (loginSubtitle) {
-      loginSubtitle.innerText = "Enter your registered business email to access your workspace.";
     }
   } else if (view === "dashboard") {
     document.getElementById("viewDashboard").classList.remove("hidden");
@@ -367,21 +412,59 @@ window.handleSignup = async function () {
 
   const existingVerifiedEmail = (localStorage.getItem("verified_user_email") || "").trim().toLowerCase();
 
-  if (existingVerifiedEmail && existingVerifiedEmail === email) {
+  // ইউজারকে login এ পাঠানোর সাধারণ helper (duplicate ধরা পড়লে)
+  const sendToLoginAsRegistered = () => {
     window.showNotificationModal(
       "warning",
       "Account Already Exists",
-      `An account is already registered with ${email}. Please sign in to your workspace.`,
+      `An account is already registered with ${email}. Please log in to access your workspace.`,
       () => {
+        localStorage.setItem("verified_user_email", email);
         window.showView("login");
-        const loginEmail = document.getElementById("loginEmail");
-        if (loginEmail) loginEmail.value = email;
-      }
+      },
+      "Go to Log In"
     );
+  };
+
+  // ধাপ ১ (দ্রুত, একই browser): localStorage এ verified email মিললে সাথে সাথে আটকাও
+  if (existingVerifiedEmail && existingVerifiedEmail === email) {
+    sendToLoginAsRegistered();
     return;
   }
 
   const suBtn = document.getElementById("suBtn");
+
+  // ধাপ ২ (নিখুঁত, অন্য browser/device ও): server-side এ auth.users যাচাই
+  // Edge Function { exists: true/false } দেয়। exists হলে signup আটকাও।
+  suBtn.innerText = "Checking your email...";
+  suBtn.disabled = true;
+
+  try {
+    const chkRes = await fetch(CHECK_EMAIL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_PUBLISHABLE_KEY,
+        "Authorization": "Bearer " + SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify({ email: email }),
+    });
+    if (chkRes.ok) {
+      const chk = await chkRes.json();
+      if (chk && chk.exists === true) {
+        suBtn.innerText = "Register & Send Verification Code";
+        suBtn.disabled = false;
+        sendToLoginAsRegistered();
+        return;
+      }
+    }
+    // chkRes ok না হলে বা exists:false — signup চালিয়ে যাও
+    // (server অনুপলব্ধ হলেও Apps Script duplicate-prevention শেষ রক্ষাকবচ)
+  } catch (e) {
+    // network fail হলে signup আটকাব না — flow চালু রাখি
+    console.error("check-email call failed:", e);
+  }
+
   suBtn.innerText = "Sending Verification OTP...";
   suBtn.disabled = true;
 
@@ -631,4 +714,136 @@ window.handleFullSignOut = async function () {
   window.suppressAuthRedirect = false;
   window.clearSessionData();
   window.showView("signup");
+};
+
+// ============================================================================
+// COMPLETE PROFILE (Google OAuth এর পর phone + country সংগ্রহ)
+// ============================================================================
+
+// name validation — signup এর validateNameLive এর মতোই (junk keyword সহ)
+window.validateCompleteProfileName = function () {
+  const nameInput = document.getElementById("cpName");
+  const warningEl = document.getElementById("cpNameWarning");
+  if (!nameInput || !warningEl) return true;
+
+  const cleaned = nameInput.value.replace(/[^a-zA-Z\s.]/g, "");
+  nameInput.value = cleaned;
+  const trimmed = cleaned.trim();
+
+  if (!trimmed) {
+    warningEl.innerText = "Full name is required.";
+    warningEl.classList.remove("hidden");
+    return false;
+  }
+  if (trimmed.length < 2) {
+    warningEl.innerText = "Name must be at least 2 letters long.";
+    warningEl.classList.remove("hidden");
+    return false;
+  }
+  const words = trimmed.toLowerCase().split(/\s+/);
+  const junkHit = words.find((w) => JUNK_KEYWORDS.includes(w));
+  if (junkHit) {
+    warningEl.innerText = "Please enter your real full name.";
+    warningEl.classList.remove("hidden");
+    return false;
+  }
+  warningEl.classList.add("hidden");
+  return true;
+};
+
+// profile submit — সব যাচাই করে Sheet এ Sign_Up পাঠায়, তারপর dashboard
+window.handleCompleteProfile = async function () {
+  const nameInput = document.getElementById("cpName");
+  const emailInput = document.getElementById("cpEmail");
+  const countrySelect = document.getElementById("cpCountrySelect");
+  const phoneInput = document.getElementById("cpPhone");
+  const phoneWarning = document.getElementById("cpPhoneWarning");
+  const submitBtn = document.getElementById("cpSubmitBtn");
+
+  // ১. name যাচাই
+  if (!window.validateCompleteProfileName()) {
+    nameInput.focus();
+    return;
+  }
+
+  // ২. country বাছা হয়েছে কিনা
+  const selectedOpt = countrySelect.options[countrySelect.selectedIndex];
+  if (!selectedOpt || !selectedOpt.value) {
+    if (phoneWarning) {
+      phoneWarning.innerText = "Please choose your country.";
+      phoneWarning.classList.remove("hidden");
+    }
+    return;
+  }
+
+  // ৩. phone যাচাই (signup এর মতোই digit count)
+  if (!window.validatePhoneLive("complete")) {
+    phoneInput.focus();
+    return;
+  }
+  const prefix = selectedOpt.getAttribute("data-code") || "";
+  if (!phoneInput.value || phoneInput.value.length <= prefix.length) {
+    if (phoneWarning) {
+      phoneWarning.innerText = "Please enter your WhatsApp number.";
+      phoneWarning.classList.remove("hidden");
+    }
+    phoneInput.focus();
+    return;
+  }
+
+  const fullName = nameInput.value.trim();
+  const email = (emailInput.value || "").trim().toLowerCase();
+  const countryName = selectedOpt.value;
+  const cleanPhone = phoneInput.value.replace(/\s+/g, "");
+  const cleanPhoneLink = "https://wa.me/" + cleanPhone.replace(/[^0-9]/g, "");
+
+  submitBtn.disabled = true;
+  submitBtn.innerText = "Saving...";
+
+  // localStorage এ সেভ (auto-fill ও returning login এর জন্য)
+  localStorage.setItem("verified_user_email", email);
+  localStorage.setItem("signup_fullName", fullName);
+  localStorage.setItem("signup_country", countryName);
+  localStorage.setItem("signup_phone", cleanPhoneLink);
+
+  // Supabase user_metadata তেও phone/country আপডেট (ভবিষ্যতে কাজে লাগবে)
+  try {
+    await window.sbClient.auth.updateUser({
+      data: { full_name: fullName, phone: cleanPhoneLink, country: countryName },
+    });
+  } catch (e) {
+    console.error("updateUser error:", e);
+  }
+
+  // Sheet এ Sign_Up পাঠাও (এখন সম্পূর্ণ ডেটা সহ)
+  const googleSignupSyncedKey = `google_synced_${email}`;
+  try {
+    await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        form_name: "Sign_Up",
+        full_name: fullName,
+        email: email,
+        whatsapp: cleanPhoneLink,
+        country: countryName,
+        remarks: "Lead"
+      }),
+    });
+    localStorage.setItem(googleSignupSyncedKey, "true");
+  } catch (err) {
+    console.error("Complete profile sheet sync error:", err);
+  }
+
+  // conversion ট্র্যাকিং
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: "login_success",
+    user_data: { email: email, name: fullName },
+  });
+
+  submitBtn.disabled = false;
+  submitBtn.innerText = "Continue to Dashboard";
+  window.showView("dashboard");
 };
