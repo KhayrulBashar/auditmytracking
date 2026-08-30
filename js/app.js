@@ -99,6 +99,16 @@ document.addEventListener("DOMContentLoaded", async function () {
     localStorage.removeItem("user_logged_out");
   }
 
+  // URL থেকে যেকোনো hash (# / #access_token) পরিষ্কার করো — পরিষ্কার, পেশাদার URL।
+  // replaceState তাই page reload হয় না, history তে বাড়তি entry ও পড়ে না।
+  if (window.location.hash) {
+    history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search
+    );
+  }
+
   const { data: { session }, error } = await window.sbClient.auth.getSession();
 
   // ── GUEST অবস্থা: session নেই ──────────────────────────────────────────
