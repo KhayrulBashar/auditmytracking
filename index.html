@@ -19,6 +19,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Inter font (পেশাদার, দ্রুত; display=swap তাই render আটকায় না) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- Testing Mode: Search Engine Crawl Blocking -->
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
     <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
@@ -93,6 +101,28 @@
     <!-- ===== EXTERNAL LIBRARIES  (Tailwind, Supabase, jsPDF) -->
     <!-- ====================================================================== -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // পুরো সাইটে default font = Inter (system font fallback সহ)
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: [
+                "Inter",
+                "ui-sans-serif",
+                "system-ui",
+                "-apple-system",
+                "Segoe UI",
+                "Roboto",
+                "Helvetica Neue",
+                "Arial",
+                "sans-serif",
+              ],
+            },
+          },
+        },
+      };
+    </script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css" />
     <!-- Supabase JS Client Library -->
@@ -112,7 +142,7 @@
     </style>
   </head>
   <body
-    class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950"
+    class="font-sans bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950"
   >
     <!-- Google Tag Manager (noscript) -->
     <noscript
@@ -172,7 +202,7 @@
         <div
           class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-400 to-indigo-500 rounded-t-2xl"
         ></div>
-        <h2 class="text-2xl font-bold text-white mb-2">Create Free Account</h2>
+        <p class="text-2xl font-bold text-white mb-2">Create Free Account</p>
         <p class="text-sm text-slate-400 mb-6">
           Register to access free tracking diagnostics and reports.
         </p>
@@ -207,16 +237,15 @@
 
         <div id="suDivider" class="relative flex py-2 items-center mb-4">
           <div class="flex-grow border-t border-slate-800"></div>
-          <span
-            class="flex-shrink mx-4 text-xs uppercase text-slate-500 font-semibold"
-            >Or with Email</span
+          <span class="flex-shrink mx-4 text-xs text-slate-500 font-semibold"
+            >or with email</span
           >
           <div class="flex-grow border-t border-slate-800"></div>
         </div>
 
         <form id="signupForm" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1"
+            <label class="block text-sm font-medium text-slate-400 mb-1"
               >Name</label
             >
             <input
@@ -234,7 +263,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1"
+            <label class="block text-sm font-medium text-slate-400 mb-1"
               >Email</label
             >
             <input
@@ -253,11 +282,11 @@
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="text-xs font-semibold text-slate-400"
+              <label class="text-sm font-medium text-slate-400"
                 >Country Code</label
               >
               <label
-                class="hidden sm:block text-xs font-semibold text-slate-400 mr-24"
+                class="hidden sm:block text-sm font-medium text-slate-400 mr-24"
                 >WhatsApp</label
               >
             </div>
@@ -268,7 +297,7 @@
                   type="button"
                   id="suCountryTrigger"
                   onclick="window.toggleCountryDropdown('signup')"
-                  class="w-full flex items-center justify-between bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
+                  class="w-full flex items-center justify-between bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
                 >
                   <span id="suCountryLabel" class="text-slate-400 truncate"
                     >Choose Country</span
@@ -307,7 +336,7 @@
                       id="suCountrySearch"
                       oninput="window.filterCountryList('signup')"
                       placeholder="Search Country or Code..."
-                      class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     />
                   </div>
                   <div
@@ -323,7 +352,7 @@
                 oninput="window.validatePhoneLive('signup')"
                 placeholder="Choose Country First"
                 disabled
-                class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono transition disabled:opacity-60 disabled:cursor-not-allowed"
+                class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
             <p
@@ -360,9 +389,9 @@
         class="w-full max-w-md bg-slate-900/70 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl hidden"
       >
         <div class="mb-5">
-          <h2 class="text-2xl font-black text-white mb-1">
+          <p class="text-2xl font-black text-white mb-1">
             Complete Your Profile
-          </h2>
+          </p>
           <p class="text-sm text-cyan-300 leading-relaxed">
             Almost done! Please confirm your name and add your WhatsApp number
             so we can send your audit reports and updates.
@@ -371,7 +400,7 @@
 
         <!-- Full Name (Google থেকে auto-fill, edit করা যাবে) -->
         <div class="mb-4">
-          <label class="block text-xs font-semibold text-slate-400 mb-1"
+          <label class="block text-sm font-medium text-slate-400 mb-1"
             >Name</label
           >
           <input
@@ -389,7 +418,7 @@
 
         <!-- Work Email (Google থেকে auto-fill, LOCKED — edit করা যাবে না) -->
         <div class="mb-4">
-          <label class="block text-xs font-semibold text-slate-400 mb-1"
+          <label class="block text-sm font-medium text-slate-400 mb-1"
             >Email</label
           >
           <div class="relative">
@@ -409,11 +438,11 @@
         <!-- Country + Phone (signup এর মতোই validation) -->
         <div class="mb-5">
           <div class="flex justify-between items-center mb-1">
-            <label class="text-xs font-semibold text-slate-400"
+            <label class="text-sm font-medium text-slate-400"
               >Country Code</label
             >
             <label
-              class="hidden sm:block text-xs font-semibold text-slate-400 mr-24"
+              class="hidden sm:block text-sm font-medium text-slate-400 mr-24"
               >WhatsApp</label
             >
           </div>
@@ -424,7 +453,7 @@
                 type="button"
                 id="cpCountryTrigger"
                 onclick="window.toggleCountryDropdown('complete')"
-                class="w-full flex items-center justify-between bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
+                class="w-full flex items-center justify-between bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
               >
                 <span id="cpCountryLabel" class="text-slate-400 truncate"
                   >Choose Country</span
@@ -461,7 +490,7 @@
                     id="cpCountrySearch"
                     oninput="window.filterCountryList('complete')"
                     placeholder="Search Country or Code..."
-                    class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   />
                 </div>
                 <div
@@ -476,7 +505,7 @@
               oninput="window.validatePhoneLive('complete')"
               placeholder="Choose Country First"
               disabled
-              class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono transition disabled:opacity-60 disabled:cursor-not-allowed"
+              class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
           <p
@@ -503,9 +532,9 @@
         <div
           class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-400 to-indigo-500"
         ></div>
-        <h2 id="loginTitle" class="text-2xl font-bold text-white mb-2">
+        <p id="loginTitle" class="text-2xl font-bold text-white mb-2">
           Welcome Back
-        </h2>
+        </p>
         <p id="loginSubtitle" class="text-sm text-slate-400 mb-6">
           Enter your registered business email to access your workspace.
         </p>
@@ -539,9 +568,8 @@
           </button>
           <div class="relative flex py-2 items-center mb-4">
             <div class="flex-grow border-t border-slate-800"></div>
-            <span
-              class="flex-shrink mx-4 text-xs uppercase text-slate-500 font-semibold"
-              >Or with Email</span
+            <span class="flex-shrink mx-4 text-xs text-slate-500 font-semibold"
+              >or with email</span
             >
             <div class="flex-grow border-t border-slate-800"></div>
           </div>
@@ -559,7 +587,7 @@
           <div>
             <label
               id="loginEmailLabel"
-              class="block text-xs font-semibold text-slate-400 mb-1"
+              class="block text-sm font-medium text-slate-400 mb-1"
               >Email</label
             >
             <input
@@ -591,7 +619,7 @@
           class="space-y-4 hidden"
         >
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1"
+            <label class="block text-sm font-medium text-slate-400 mb-1"
               >Enter Email Verification OTP Code</label
             >
             <input
@@ -645,7 +673,7 @@
 
           <!-- স্থির H1 — SEO এর মূল topic signal (কখনো বদলায় না) -->
           <h1
-            class="text-2xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight text-center max-w-3xl mx-auto mt-3 text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-cyan-300"
+            class="text-2xl sm:text-4xl md:text-5xl font-black leading-relaxed tracking-tight text-center max-w-3xl mx-auto mt-3 text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-cyan-300 py-1"
           >
             Free Website Tracking Audit for GA4, Google Ads &amp; Meta
           </h1>
@@ -669,7 +697,7 @@
             </p>
           </div>
 
-          <p class="text-slate-400 mt-2 text-sm sm:text-base">
+          <p class="text-slate-400 mt-2 text-sm sm:text-base leading-relaxed">
             Deep technical scan across Google Ads, GA4, Consent Mode v2, Meta
             CAPI, GTM &amp; Server Tagging.
           </p>
@@ -791,9 +819,9 @@
             <div
               class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center"
             >
-              <h3 class="font-bold text-white text-sm sm:text-base">
-                Technical Findings & Diagnostic Details
-              </h3>
+              <h2 class="font-bold text-white text-sm sm:text-base">
+                Technical Findings &amp; Diagnostic Details
+              </h2>
               <span
                 id="issuesSummaryBadge"
                 class="text-xs text-rose-400 font-semibold bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-500/20"
@@ -803,7 +831,7 @@
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm">
                 <thead
-                  class="bg-slate-950 text-slate-400 border-b border-slate-800 text-xs"
+                  class="bg-slate-950 text-slate-400 border-b border-slate-800 text-xs sm:text-sm"
                 >
                   <tr>
                     <th class="p-2 sm:p-4 font-semibold">
@@ -839,7 +867,7 @@
               <h3 class="text-xl sm:text-2xl font-black text-white">
                 Don't want to deal with tracking bugs?
               </h3>
-              <p class="text-xs sm:text-sm text-slate-300 max-w-xl">
+              <p class="text-sm text-slate-300 max-w-xl leading-relaxed">
                 Our analytics engineers can fix Google Ads, Consent Mode v2,
                 Meta CAPI, and Server-Side tracking within 24-48 hours.
               </p>
@@ -900,20 +928,20 @@
           <input id="bmServiceType" type="hidden" value="Book Tracking Setup" />
 
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1"
+            <label class="block text-sm font-medium text-slate-400 mb-1"
               >Name</label
             >
             <input
               id="bmName"
               type="text"
               placeholder="Your Name"
-              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
               required
             />
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1"
+            <label class="block text-sm font-medium text-slate-400 mb-1"
               >Email</label
             >
             <input
@@ -921,7 +949,7 @@
               type="email"
               oninput="window.validateEmailLive('bmEmail', 'bmEmailWarning')"
               placeholder="Your Work or Business Email"
-              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
               required
             />
             <p
@@ -932,11 +960,11 @@
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="text-xs font-semibold text-slate-400"
+              <label class="text-sm font-medium text-slate-400"
                 >Country Code</label
               >
               <label
-                class="hidden sm:block text-xs font-semibold text-slate-400 mr-28"
+                class="hidden sm:block text-sm font-medium text-slate-400 mr-28"
                 >WhatsApp</label
               >
             </div>
@@ -947,7 +975,7 @@
                   type="button"
                   id="bmCountryTrigger"
                   onclick="window.toggleCountryDropdown('booking')"
-                  class="w-full flex items-center justify-between bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
+                  class="w-full flex items-center justify-between bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
                 >
                   <span id="bmCountryLabel" class="text-slate-400 truncate"
                     >Choose Country</span
@@ -984,7 +1012,7 @@
                       id="bmCountrySearch"
                       oninput="window.filterCountryList('booking')"
                       placeholder="Search Country or Code..."
-                      class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     />
                   </div>
                   <div
@@ -1000,7 +1028,7 @@
                 oninput="window.validatePhoneLive('booking')"
                 placeholder="Choose Country First"
                 disabled
-                class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono disabled:opacity-60 disabled:cursor-not-allowed"
+                class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
             <p
@@ -1010,7 +1038,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1"
+            <label class="block text-sm font-medium text-slate-400 mb-1"
               >Store / Website URL</label
             >
             <input
@@ -1019,7 +1047,7 @@
               inputmode="url"
               placeholder="Your Website Address"
               oninput="window.validateSiteUrlLive()"
-              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
             />
             <p
               id="bmSiteUrlWarning"
@@ -1029,13 +1057,13 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1"
+              <label class="block text-sm font-medium text-slate-400 mb-1"
                 >Business Goal</label
               >
               <select
                 id="bmGoal"
                 onchange="window.onBusinessGoalChanged()"
-                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
                 required
               >
                 <option value="" disabled selected>Choose Goal</option>
@@ -1055,12 +1083,12 @@
             <div>
               <label
                 id="bmPlatformLabel"
-                class="block text-xs font-semibold text-slate-400 mb-1"
+                class="block text-sm font-medium text-slate-400 mb-1"
                 >Platform</label
               >
               <select
                 id="bmPlatform"
-                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 cursor-pointer"
                 required
               >
                 <option value="" disabled selected>Choose Goal First</option>
@@ -1070,27 +1098,27 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1"
+              <label class="block text-sm font-medium text-slate-400 mb-1"
                 >Tracking Objective</label
               >
               <input
                 id="bmObjective"
                 type="text"
                 placeholder="e.g. Purchase / Lead / Signup"
-                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
                 required
               />
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1"
+              <label class="block text-sm font-medium text-slate-400 mb-1"
                 >Marketing / Analytics Platform</label
               >
               <input
                 id="bmMarketingPlatform"
                 type="text"
                 placeholder="e.g. GA4 + Google Ads + Meta"
-                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
                 required
               />
             </div>
@@ -1099,14 +1127,14 @@
           <div>
             <label
               id="bmNotesLabel"
-              class="block text-xs font-semibold text-slate-400 mb-1"
+              class="block text-sm font-medium text-slate-400 mb-1"
               >Describe Your Tracking Issues</label
             >
             <textarea
               id="bmNotes"
               rows="2"
               placeholder="Mention What Is Not Working (e.g. Purchases Not Tracking in GA4...)"
-              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
             ></textarea>
           </div>
 

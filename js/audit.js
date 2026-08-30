@@ -551,7 +551,7 @@ window.runAudit = async function () {
           ${row.status}
         </span>
       </td>
-      <td class="p-2 sm:p-4 text-xs text-slate-300 leading-relaxed">
+      <td class="p-2 sm:p-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
         <div class="font-semibold text-slate-200 mb-0.5">${row.issueName}</div>
         <div class="text-slate-400">${row.details}</div>
       </td>
