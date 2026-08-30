@@ -217,13 +217,13 @@
         <form id="signupForm" class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
-              >Full Name</label
+              >Name</label
             >
             <input
               id="suFullName"
               type="text"
               oninput="window.validateNameLive()"
-              placeholder="Your full name"
+              placeholder="Your Name"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition"
               required
             />
@@ -235,13 +235,13 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
-              >Work Email</label
+              >Email</label
             >
             <input
               id="suEmail"
               type="email"
               oninput="window.validateEmailLive('suEmail', 'emailWarning')"
-              placeholder="Your work or business email"
+              placeholder="Your Work or Business Email"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition"
               required
             />
@@ -258,7 +258,7 @@
               >
               <label
                 class="hidden sm:block text-xs font-semibold text-slate-400 mr-24"
-                >Phone Number</label
+                >WhatsApp</label
               >
             </div>
             <div class="flex flex-col sm:flex-row gap-2">
@@ -306,7 +306,7 @@
                       type="text"
                       id="suCountrySearch"
                       oninput="window.filterCountryList('signup')"
-                      placeholder="Search country or code..."
+                      placeholder="Search Country or Code..."
                       class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     />
                   </div>
@@ -321,7 +321,7 @@
                 id="suPhone"
                 type="tel"
                 oninput="window.validatePhoneLive('signup')"
-                placeholder="123456789"
+                placeholder="Choose Country First"
                 class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono transition"
               />
             </div>
@@ -370,15 +370,14 @@
 
         <!-- Full Name (Google থেকে auto-fill, edit করা যাবে) -->
         <div class="mb-4">
-          <label
-            class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5"
-            >Full Name</label
+          <label class="block text-xs font-semibold text-slate-400 mb-1"
+            >Name</label
           >
           <input
             id="cpName"
             type="text"
             oninput="window.validateCompleteProfileName()"
-            placeholder="Your full name"
+            placeholder="Your Name"
             class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 text-sm transition"
           />
           <p
@@ -389,9 +388,8 @@
 
         <!-- Work Email (Google থেকে auto-fill, LOCKED — edit করা যাবে না) -->
         <div class="mb-4">
-          <label
-            class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5"
-            >Work Email</label
+          <label class="block text-xs font-semibold text-slate-400 mb-1"
+            >Email</label
           >
           <div class="relative">
             <input
@@ -409,10 +407,15 @@
 
         <!-- Country + Phone (signup এর মতোই validation) -->
         <div class="mb-5">
-          <label
-            class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5"
-            >WhatsApp Number</label
-          >
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold text-slate-400"
+              >Country Code</label
+            >
+            <label
+              class="hidden sm:block text-xs font-semibold text-slate-400 mr-24"
+              >WhatsApp</label
+            >
+          </div>
           <div class="flex flex-col sm:flex-row gap-2">
             <!-- custom searchable country dropdown (complete profile) -->
             <div class="relative w-full sm:w-48" id="cpCountryWrap">
@@ -456,7 +459,7 @@
                     type="text"
                     id="cpCountrySearch"
                     oninput="window.filterCountryList('complete')"
-                    placeholder="Search country or code..."
+                    placeholder="Search Country or Code..."
                     class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   />
                 </div>
@@ -470,7 +473,7 @@
               id="cpPhone"
               type="tel"
               oninput="window.validatePhoneLive('complete')"
-              placeholder="123456789"
+              placeholder="Choose Country First"
               class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono transition"
             />
           </div>
@@ -555,12 +558,12 @@
             <label
               id="loginEmailLabel"
               class="block text-xs font-semibold text-slate-400 mb-1"
-              >Registered Work Email</label
+              >Email</label
             >
             <input
               id="loginEmail"
               type="email"
-              placeholder="Your work or business email"
+              placeholder="Your Work or Business Email"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-medium transition"
               required
             />
@@ -593,7 +596,7 @@
               id="loginOtp"
               type="text"
               maxlength="8"
-              placeholder="Enter your verification code"
+              placeholder="Your Verification Code"
               autocomplete="one-time-code"
               class="w-full text-center tracking-widest text-lg sm:text-xl font-mono bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-cyan-400 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-semibold transition"
               required
@@ -684,7 +687,7 @@
               id="targetUrl"
               type="text"
               inputmode="url"
-              placeholder="Enter your website address"
+              placeholder="Your Website Address"
               class="flex-1 bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 text-sm transition"
             />
             <button
@@ -894,12 +897,12 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
-              >Your Name</label
+              >Name</label
             >
             <input
               id="bmName"
               type="text"
-              placeholder="Your full name"
+              placeholder="Your Name"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
               required
             />
@@ -907,13 +910,13 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1"
-              >Work Email</label
+              >Email</label
             >
             <input
               id="bmEmail"
               type="email"
               oninput="window.validateEmailLive('bmEmail', 'bmEmailWarning')"
-              placeholder="Your work or business email"
+              placeholder="Your Work or Business Email"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
               required
             />
@@ -976,7 +979,7 @@
                       type="text"
                       id="bmCountrySearch"
                       oninput="window.filterCountryList('booking')"
-                      placeholder="Search country or code..."
+                      placeholder="Search Country or Code..."
                       class="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     />
                   </div>
@@ -991,7 +994,7 @@
                 id="bmWhatsApp"
                 type="tel"
                 oninput="window.validatePhoneLive('booking')"
-                placeholder=""
+                placeholder="Choose Country First"
                 class="w-full flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 font-mono"
               />
             </div>
@@ -1009,7 +1012,7 @@
               id="bmSiteUrl"
               type="text"
               inputmode="url"
-              placeholder="Enter your website address"
+              placeholder="Your Website Address"
               oninput="window.validateSiteUrlLive()"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
             />
@@ -1097,7 +1100,7 @@
             <textarea
               id="bmNotes"
               rows="2"
-              placeholder="Mention what is not working (e.g. Purchases not tracking in GA4...)"
+              placeholder="Mention What Is Not Working (e.g. Purchases Not Tracking in GA4...)"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400"
             ></textarea>
           </div>

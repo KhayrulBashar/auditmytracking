@@ -61,6 +61,15 @@ window.resetCountryDropdown = function (formType) {
     label.classList.remove("text-white");
   }
   if (panel) panel.classList.add("hidden");
+
+  // country রিসেট হলে phone ফিল্ডও লক করো (country না বাছা অবস্থায় ফিরে যাক)
+  const phoneId = prefix === "su" ? "suPhone" : prefix === "cp" ? "cpPhone" : "bmWhatsApp";
+  const phoneInput = document.getElementById(phoneId);
+  if (phoneInput) {
+    phoneInput.value = "";
+    phoneInput.placeholder = "Choose Country First";
+    phoneInput.disabled = true;
+  }
 };
 
 // ── custom searchable country dropdown ─────────────────────────────────────
@@ -188,15 +197,17 @@ window.onCountryChanged = function (formType) {
 
   const country = window.getSelectedCountry(formType);
 
-  // country না বাছলে → placeholder দেখাও, ফিল্ড খালি
+  // country না বাছলে → ফিল্ড disabled, placeholder দেখাও, খালি
   if (!country) {
     phoneInput.value = "";
-    phoneInput.placeholder = "123456789";
+    phoneInput.placeholder = "Choose Country First";
+    phoneInput.disabled = true;
     return;
   }
 
-  // country বাছা হলে → placeholder সরিয়ে country code বসাও, cursor code এর পরে
+  // country বাছা হলে → enable করো, placeholder সরাও, country code বসাও, cursor code এর পরে
   const code = country.code || "";
+  phoneInput.disabled = false;
   phoneInput.placeholder = "";
   phoneInput.value = code ? code : "";
   phoneInput.focus();
@@ -241,15 +252,9 @@ window.validatePhoneLive = function (formType) {
   phoneInput.value = prefix + afterPrefix;
 
   if (warningEl) {
-    if (!afterPrefix) {
-      warningEl.innerText = "Please enter your WhatsApp number.";
-      warningEl.classList.remove("hidden");
-      return false;
-    }
-
     if (afterPrefix.length < minDigits || afterPrefix.length > maxDigits) {
       const requiredText = minDigits === maxDigits ? `${minDigits}` : `${minDigits}-${maxDigits}`;
-      warningEl.innerText = `Invalid length for ${countryName}. Requires ${requiredText} digits after ${prefix}.`;
+      warningEl.innerText = `Invalid length for ${countryName}. Requires valid ${requiredText} digits after ${prefix}`;
       warningEl.classList.remove("hidden");
       return false;
     }
@@ -271,13 +276,13 @@ window.validateNameLive = function () {
   const trimmed = cleaned.trim();
 
   if (!trimmed) {
-    warningEl.innerText = "Full name is required.";
+    warningEl.innerText = "Full name is required";
     warningEl.classList.remove("hidden");
     return false;
   }
 
   if (trimmed.length < 2) {
-    warningEl.innerText = "Name must be at least 2 letters long.";
+    warningEl.innerText = "Name must be at least 2 letters long";
     warningEl.classList.remove("hidden");
     return false;
   }
@@ -286,7 +291,7 @@ window.validateNameLive = function () {
   const words = trimmed.toLowerCase().split(/\s+/);
   const junkHit = words.find((w) => JUNK_KEYWORDS.includes(w));
   if (junkHit) {
-    warningEl.innerText = "Please enter your real full name.";
+    warningEl.innerText = "Please enter your real full name";
     warningEl.classList.remove("hidden");
     return false;
   }
@@ -311,13 +316,13 @@ window.validateEmailLive = function (inputId = "suEmail", warningId = "emailWarn
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(email)) {
-    warningEl.innerText = "Please enter a valid work email format.";
+    warningEl.innerText = "Please enter a valid work email format";
     warningEl.classList.remove("hidden");
     return false;
   }
 
   if (domain && DISPOSABLE_DOMAINS.includes(domain)) {
-    warningEl.innerText = "Temporary/Disposable emails are strictly not allowed.";
+    warningEl.innerText = "Temporary/Disposable emails are strictly not allowed";
     warningEl.classList.remove("hidden");
     return false;
   }
@@ -411,7 +416,7 @@ window.showView = function (view) {
       if (loginSubtitle) {
         loginSubtitle.innerText = "You're all set. Just confirm to securely access your workspace.";
       }
-      if (loginEmailLabel) loginEmailLabel.innerText = "Your Registered Email";
+      if (loginEmailLabel) loginEmailLabel.innerText = "Email";
     } else {
       if (loginGoogleArea) loginGoogleArea.classList.remove("hidden");
       if (loginSignupPrompt) loginSignupPrompt.classList.remove("hidden");
@@ -425,7 +430,7 @@ window.showView = function (view) {
       if (loginSubtitle) {
         loginSubtitle.innerText = "Enter your registered business email to access your workspace.";
       }
-      if (loginEmailLabel) loginEmailLabel.innerText = "Registered Work Email";
+      if (loginEmailLabel) loginEmailLabel.innerText = "Email";
     }
 
     if (loginFormEmail && loginFormOtp) {
@@ -514,7 +519,7 @@ window.handleSignup = async function () {
   if (!chosenCountry) {
     const warn = document.getElementById("phoneWarning");
     if (warn) {
-      warn.innerText = "Please choose your country.";
+      warn.innerText = "Please choose your country";
       warn.classList.remove("hidden");
     }
     return;
@@ -850,19 +855,19 @@ window.validateCompleteProfileName = function () {
   const trimmed = cleaned.trim();
 
   if (!trimmed) {
-    warningEl.innerText = "Full name is required.";
+    warningEl.innerText = "Full name is required";
     warningEl.classList.remove("hidden");
     return false;
   }
   if (trimmed.length < 2) {
-    warningEl.innerText = "Name must be at least 2 letters long.";
+    warningEl.innerText = "Name must be at least 2 letters long";
     warningEl.classList.remove("hidden");
     return false;
   }
   const words = trimmed.toLowerCase().split(/\s+/);
   const junkHit = words.find((w) => JUNK_KEYWORDS.includes(w));
   if (junkHit) {
-    warningEl.innerText = "Please enter your real full name.";
+    warningEl.innerText = "Please enter your real full name";
     warningEl.classList.remove("hidden");
     return false;
   }
@@ -874,7 +879,6 @@ window.validateCompleteProfileName = function () {
 window.handleCompleteProfile = async function () {
   const nameInput = document.getElementById("cpName");
   const emailInput = document.getElementById("cpEmail");
-  const countrySelect = document.getElementById("cpCountrySelect");
   const phoneInput = document.getElementById("cpPhone");
   const phoneWarning = document.getElementById("cpPhoneWarning");
   const submitBtn = document.getElementById("cpSubmitBtn");
@@ -885,39 +889,30 @@ window.handleCompleteProfile = async function () {
     return;
   }
 
-  // ২. country বাছা হয়েছে কিনা
-  const selectedOpt = countrySelect.options[countrySelect.selectedIndex];
-  if (!selectedOpt || !selectedOpt.value) {
+  // ২. country বাছা হয়েছে কিনা (custom dropdown → hidden input)
+  const selectedCountry = window.getSelectedCountry("complete");
+  if (!selectedCountry) {
     if (phoneWarning) {
-      phoneWarning.innerText = "Please choose your country.";
+      phoneWarning.innerText = "Please choose your country";
       phoneWarning.classList.remove("hidden");
     }
     return;
   }
 
-  // ৩. phone যাচাই (signup এর মতোই digit count)
+  // ৩. phone যাচাই (signup এর মতোই digit count — খালি/ভুল দৈর্ঘ্য দুটোই এখানে ধরা পড়ে)
   if (!window.validatePhoneLive("complete")) {
-    phoneInput.focus();
-    return;
-  }
-  const prefix = selectedOpt.getAttribute("data-code") || "";
-  if (!phoneInput.value || phoneInput.value.length <= prefix.length) {
-    if (phoneWarning) {
-      phoneWarning.innerText = "Please enter your WhatsApp number.";
-      phoneWarning.classList.remove("hidden");
-    }
     phoneInput.focus();
     return;
   }
 
   const fullName = nameInput.value.trim();
   const email = (emailInput.value || "").trim().toLowerCase();
-  const countryName = selectedOpt.value;
+  const countryName = selectedCountry.name;
   const cleanPhone = phoneInput.value.replace(/\s+/g, "");
   const cleanPhoneLink = "https://wa.me/" + cleanPhone.replace(/[^0-9]/g, "");
 
   submitBtn.disabled = true;
-  submitBtn.innerText = "Saving...";
+  submitBtn.innerText = "Logging in to Dashboard...";
 
   // localStorage এ সেভ (auto-fill ও returning login এর জন্য)
   localStorage.setItem("verified_user_email", email);

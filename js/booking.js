@@ -161,10 +161,10 @@ window.openBookingModal = function (serviceName) {
   if (notesLabel && notesInput) {
     if (serviceName === "Fix Tracking Issues") {
       notesLabel.innerText = "Describe Your Tracking Issues";
-      notesInput.placeholder = "Mention what is not working (e.g. Purchases not tracking in GA4...)";
+      notesInput.placeholder = "Mention What Is Not Working (e.g. Purchases Not Tracking in GA4...)";
     } else {
       notesLabel.innerText = "Issue Description / Requirements (Optional)";
-      notesInput.placeholder = "Tell us about your tracking goals or issues...";
+      notesInput.placeholder = "Tell Us About Your Tracking Goals or Issues...";
     }
   }
 
@@ -172,7 +172,7 @@ window.openBookingModal = function (serviceName) {
     // scan করা হয়ে থাকলে যে service ই হোক আগের audited URL auto-fill হবে
     // (ইউজার চাইলে edit করতে পারবে — field খোলা/editable)
     siteUrlInput.value = window.currentAuditedUrl ? window.currentAuditedUrl : "";
-    siteUrlInput.placeholder = "Enter your website address";
+    siteUrlInput.placeholder = "Your Website Address";
     // auto-fill এর পর পুরনো warning থাকলে মুছে দাও
     const siteWarn = document.getElementById("bmSiteUrlWarning");
     if (siteWarn) siteWarn.classList.add("hidden");
@@ -204,11 +204,14 @@ window.openBookingModal = function (serviceName) {
 
   // ধাপ ১ (অগ্রাধিকার): সেভ করা phone এর dial code (+880) দিয়ে ম্যাচ
   // সবচেয়ে লম্বা code আগে মেলাও (+1 এর আগে +1876 যাতে ভুল না হয়)
+  // savedPhone "https://wa.me/8801..." আকারে থাকে (+ ছাড়া), তাই ডিজিট বের করে
+  // সামনে "+" বসিয়ে normalize করি — নাহলে "+880" এর সাথে কখনো ম্যাচ হয় না।
   if (savedPhone && typeof COUNTRY_LIST !== "undefined") {
-    const phoneDigits = savedPhone.replace(/[^0-9+]/g, "");
+    let phoneDigits = savedPhone.replace(/[^0-9]/g, ""); // শুধু ডিজিট
+    const normalized = phoneDigits ? "+" + phoneDigits : ""; // সামনে + বসাও
     let bestLen = 0;
     COUNTRY_LIST.forEach((c) => {
-      if (c.c && phoneDigits.startsWith(c.c) && c.c.length > bestLen) {
+      if (c.c && normalized.startsWith(c.c) && c.c.length > bestLen) {
         matchedCountry = c;
         bestLen = c.c.length;
       }
@@ -227,13 +230,27 @@ window.openBookingModal = function (serviceName) {
 
   // phone: সেভ থাকলে বসাও; নাহলে selectCountry prefix বসিয়ে দিয়েছে
   if (phoneInput) {
-    if (savedPhone) {
-      // WhatsApp link আকারে সেভ থাকতে পারে — শুধু ডিজিট/প্লাস বের করে দেখাও
-      const digits = savedPhone.replace(/[^0-9+]/g, "");
-      phoneInput.value = digits.startsWith("+") ? digits : (digits ? "+" + digits : "");
-    } else if (!matchedCountry) {
+    if (matchedCountry) {
+      // country ম্যাচ হয়েছে → ফিল্ড enable করো
+      phoneInput.disabled = false;
+      if (savedPhone) {
+        const digits = savedPhone.replace(/[^0-9]/g, "");
+        phoneInput.value = digits ? "+" + digits : "";
+      }
+    } else {
+      // country ম্যাচ হয়নি → ফিল্ড লক রাখো, placeholder দেখাও
+      phoneInput.disabled = true;
       phoneInput.value = "";
+      phoneInput.placeholder = "Choose Country First";
     }
+  }
+
+  // auto-fill এর পর warning পরিষ্কার করো — সঠিক ডেটা থাকলে ভুল warning দেখাবে না।
+  // country + phone দুটোই সেভ থেকে এলে খোলার সময় কোনো error state থাকা উচিত নয়।
+  const bmWarn = document.getElementById("bmPhoneWarning");
+  if (bmWarn) {
+    bmWarn.innerText = "";
+    bmWarn.classList.add("hidden");
   }
 
   if (modal) modal.classList.remove("hidden");
@@ -253,8 +270,8 @@ window.handleBookingSubmit = async function () {
 
   const isPhoneValid = window.validatePhoneLive("booking");
   if (!isPhoneValid) {
-    const selectEl = document.getElementById("bmCountrySelect");
-    const countryName = selectEl && selectEl.selectedIndex > 0 ? selectEl.options[selectEl.selectedIndex].value : "your country";
+    const cSel = window.getSelectedCountry("booking");
+    const countryName = cSel ? cSel.name : "your country";
     window.showNotificationModal("warning", "Invalid WhatsApp", `Please select a country and enter a valid WhatsApp contact number for ${countryName}.`);
     return;
   }
@@ -274,8 +291,8 @@ window.handleBookingSubmit = async function () {
   const name = document.getElementById("bmName").value.trim();
   const email = document.getElementById("bmEmail").value.trim().toLowerCase();
   const fullWhatsApp = document.getElementById("bmWhatsApp").value.trim();
-  const selectEl = document.getElementById("bmCountrySelect");
-  const countryName = selectEl && selectEl.selectedIndex > 0 ? selectEl.options[selectEl.selectedIndex].value : "Not Specified";
+  const bookingCountry = window.getSelectedCountry("booking");
+  const countryName = bookingCountry ? bookingCountry.name : "Not Specified";
   const formattedWhatsApp = toWhatsAppLink(fullWhatsApp);
 
   const siteUrl = siteCheck.normalized;

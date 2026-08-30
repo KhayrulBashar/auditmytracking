@@ -4,10 +4,11 @@
 // ============================================================================
 
 const typewriterKeywords = [
-  "Free Tracking & Conversion Audit",
-  "Google Ads & GA4 Tracking Inspector",
-  "Meta CAPI & Server-Side Tracking Audit",
-  "Consent Mode v2 & Pixel Health Checker"
+  "Is your GA4 tracking set up correctly?",
+  "Find missing Google Ads conversions in seconds",
+  "Check your Meta Pixel & Conversions API",
+  "Detect Consent Mode v2 problems instantly",
+  "See what tracking your website really runs"
 ];
 
 let currentWordIndex = 0;
@@ -54,11 +55,17 @@ function startProcessingAnimation() {
 
   let dots = 0;
   const baseText = "Please wait a while. It's processing";
-  el.innerText = baseText;
+  // স্থির অংশ + ডটের জন্য সংরক্ষিত fixed-width span।
+  // ডট বাড়লেও span এর প্রস্থ একই থাকে (inline-block + fixed ch width),
+  // তাই পুরো লাইন কখনো নড়ে না — সব ডিভাইসে।
+  el.innerHTML =
+    baseText +
+    '<span id="procDots" style="display:inline-block;width:1.6em;text-align:left"></span>';
+  const dotsEl = document.getElementById("procDots");
 
   processingInterval = setInterval(() => {
     dots = (dots + 1) % 4;
-    el.innerText = baseText + ".".repeat(dots);
+    if (dotsEl) dotsEl.textContent = ".".repeat(dots);
   }, 400);
 }
 
