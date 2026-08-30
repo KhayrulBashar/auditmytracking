@@ -21,19 +21,22 @@ const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_wWGc69H8LTBhNjDg77ANIw_A0WWdTvB";
 
 // Supabase JS Client
-window.sbClient = window.supabase.createClient(
-  "https://flpmaegkhkxxaitlgglv.supabase.co",
-  SUPABASE_PUBLISHABLE_KEY,
-  {
-    auth: {
-      // OAuth redirect এর hash (#access_token) থেকে session পড়বে,
-      // পড়ার পর Supabase নিজেই URL পরিষ্কার করার চেষ্টা করবে
-      detectSessionInUrl: true,
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  }
-);
+// Supabase client — শুধু library load থাকলে তৈরি হবে (contact/about এর মতো
+// পেজে Supabase লাগে না, তাই library নেই; সেখানে createClient স্কিপ হবে যাতে
+// error ছাড়া বাকি config — COUNTRY_LIST, webhook — load হয়)
+if (typeof window.supabase !== "undefined" && window.supabase.createClient) {
+  window.sbClient = window.supabase.createClient(
+    "https://flpmaegkhkxxaitlgglv.supabase.co",
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        detectSessionInUrl: true,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    }
+  );
+}
 
 // Google Apps Script Web App URL
 const GOOGLE_SHEET_WEBHOOK_URL =
