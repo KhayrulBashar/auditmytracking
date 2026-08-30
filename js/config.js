@@ -23,7 +23,16 @@ const SUPABASE_PUBLISHABLE_KEY =
 // Supabase JS Client
 window.sbClient = window.supabase.createClient(
   "https://flpmaegkhkxxaitlgglv.supabase.co",
-  SUPABASE_PUBLISHABLE_KEY
+  SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth: {
+      // OAuth redirect এর hash (#access_token) থেকে session পড়বে,
+      // পড়ার পর Supabase নিজেই URL পরিষ্কার করার চেষ্টা করবে
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  }
 );
 
 // Google Apps Script Web App URL

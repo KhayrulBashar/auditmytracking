@@ -99,8 +99,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     localStorage.removeItem("user_logged_out");
   }
 
-  // URL থেকে যেকোনো hash (# / #access_token) পরিষ্কার করো — পরিষ্কার, পেশাদার URL।
-  // replaceState তাই page reload হয় না, history তে বাড়তি entry ও পড়ে না।
+  const { data: { session }, error } = await window.sbClient.auth.getSession();
+
+  // session পড়া হয়ে গেছে — এখন URL থেকে hash (#access_token / #) পরিষ্কার করো।
+  // getSession এর পরে করায় token পড়া নিশ্চিত, তারপর পরিষ্কার URL থাকে।
+  // replaceState তাই reload হয় না, history তে বাড়তি entry পড়ে না।
   if (window.location.hash) {
     history.replaceState(
       null,
@@ -108,8 +111,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       window.location.pathname + window.location.search
     );
   }
-
-  const { data: { session }, error } = await window.sbClient.auth.getSession();
 
   // ── GUEST অবস্থা: session নেই ──────────────────────────────────────────
   // পথ A: guest কেও dashboard (অডিট বক্স) দেখাবো, শুধু audit চালাতে গেলে গেট
