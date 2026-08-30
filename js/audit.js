@@ -545,17 +545,17 @@ window.runAudit = async function () {
     .map(
       (row) => `
     <tr class="${row.isSetup ? "bg-slate-900/60" : "bg-slate-950/40 opacity-70"}">
-      <td class="p-4 font-semibold text-white">${row.checkpoint}</td>
-      <td class="p-4">
-        <span class="px-2.5 py-1 text-xs font-semibold rounded-full border ${row.statusColor}">
+      <td class="p-2 sm:p-4 font-semibold text-white">${row.checkpoint}</td>
+      <td class="p-2 sm:p-4">
+        <span class="inline-block px-2 py-1 text-[10px] sm:text-xs font-semibold rounded-full border ${row.statusColor}">
           ${row.status}
         </span>
       </td>
-      <td class="p-4 text-xs text-slate-300 leading-relaxed">
+      <td class="p-2 sm:p-4 text-xs text-slate-300 leading-relaxed">
         <div class="font-semibold text-slate-200 mb-0.5">${row.issueName}</div>
         <div class="text-slate-400">${row.details}</div>
       </td>
-      <td class="p-4 text-right">
+      <td class="p-2 sm:p-4 text-right">
         ${
           row.canFix
             ? `<button type="button" onclick="window.openBookingModal('Fix Tracking Issues')" class="text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white px-3 py-1.5 rounded-lg border border-indigo-500/30 transition cursor-pointer whitespace-nowrap">Fix Issue</button>`
