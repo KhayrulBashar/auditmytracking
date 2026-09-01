@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   // session পড়া হয়ে গেছে — এখন URL থেকে hash (#access_token / #) পরিষ্কার করো।
   // getSession এর পরে করায় token পড়া নিশ্চিত, তারপর পরিষ্কার URL থাকে।
   // replaceState তাই reload হয় না, history তে বাড়তি entry পড়ে না।
-  if (window.location.hash) {
+ if (window.location.href.indexOf("#") !== -1) {
     history.replaceState(
       null,
       "",
